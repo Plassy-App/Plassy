@@ -1,0 +1,21 @@
+vendor/
+node_modules/
+dist/
+*.generated.py
+
+# Mobile native/vendor build artifacts
+fromfeed-app/ios/Pods/
+fromfeed-app/android/build/
+fromfeed-app/android/.gradle/
+fromfeed-app/.expo/
+
+# Web build artifacts
+fromfeed-frontend/.next/
+
+# General transient/build outputs
+coverage/
+.turbo/
+.cache/
+tmp/
+*.log
+*.tmp
