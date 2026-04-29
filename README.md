@@ -6,14 +6,14 @@ This repository groups four GitHub projects as **Git submodules**. It only adds 
 
 ## Submodules
 
-| Directory | Repository |
-|-----------|------------|
-| `plassy-app` | `git@github.com:Sweizeur/Plassy-App.git` |
-| `plassy-backend` | `git@github.com:Sweizeur/Plassy-Backend.git` |
+| Directory          | Repository                                     |
+| ------------------ | ---------------------------------------------- |
+| `plassy-app`       | `git@github.com:Sweizeur/Plassy-App.git`       |
+| `plassy-backend`   | `git@github.com:Sweizeur/Plassy-Backend.git`   |
 | `plassy-contracts` | `git@github.com:Sweizeur/Plassy-Contracts.git` |
-| `plassy-frontend` | `git@github.com:Sweizeur/Plassy-Fontend.git` |
+| `plassy-frontend`  | `git@github.com:Sweizeur/Plassy-Fontend.git`   |
 
-*(The frontend marketing site remote name on GitHub is `Plassy-Fontend`.)*
+_(The frontend marketing site remote name on GitHub is `Plassy-Fontend`.)_
 
 ## Clone
 
