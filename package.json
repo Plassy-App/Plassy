@@ -7,7 +7,9 @@
     "lint": "pnpm --dir plassy-app run lint && bun --cwd plassy-backend run lint && bun --cwd plassy-contracts run lint && npm --prefix plassy-frontend run lint"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.4",
     "husky": "^9.1.7",
-    "lint-staged": "^15.4.3"
+    "lint-staged": "^15.4.3",
+    "tailwindcss": "^4.2.4"
   }
 }
