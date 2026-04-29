@@ -1,0 +1,12 @@
+[submodule "fromfeed-app"]
+	path = fromfeed-app
+	url = git@github.com:Sweizeur/FromFeed-App.git
+[submodule "fromfeed-backend"]
+	path = fromfeed-backend
+	url = git@github.com:Sweizeur/Fromfeed-Backend.git
+[submodule "fromfeed-contracts"]
+	path = fromfeed-contracts
+	url = git@github.com:Sweizeur/fromfeed-contracts.git
+[submodule "fromfeed-frontend"]
+	path = fromfeed-frontend
+	url = git@github.com:Sweizeur/FromFeed.git

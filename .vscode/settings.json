@@ -1,0 +1,16 @@
+{
+  "eslint.enable": true,
+  "eslint.useFlatConfig": true,
+  "eslint.workingDirectories": [
+    "./fromfeed-app",
+    "./fromfeed-backend",
+    "./fromfeed-contracts",
+    "./fromfeed-frontend"
+  ],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit",
+    "source.sortMembers": "explicit"
+  },
+  "editor.formatOnSave": false
+}
