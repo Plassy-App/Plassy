@@ -3,7 +3,8 @@
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "lint": "pnpm --dir plassy-app run lint && bun --cwd plassy-backend run lint && bun --cwd plassy-contracts run lint && npm --prefix plassy-frontend run lint"
   },
   "devDependencies": {
     "husky": "^9.1.7",
