@@ -2,10 +2,10 @@
   "eslint.enable": true,
   "eslint.useFlatConfig": true,
   "eslint.workingDirectories": [
-    "./fromfeed-app",
-    "./fromfeed-backend",
-    "./fromfeed-contracts",
-    "./fromfeed-frontend"
+    "./plassy-app",
+    "./plassy-backend",
+    "./plassy-contracts",
+    "./plassy-frontend"
   ],
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",

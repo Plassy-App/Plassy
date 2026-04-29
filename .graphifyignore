@@ -4,13 +4,13 @@ dist/
 *.generated.py
 
 # Mobile native/vendor build artifacts
-fromfeed-app/ios/Pods/
-fromfeed-app/android/build/
-fromfeed-app/android/.gradle/
-fromfeed-app/.expo/
+plassy-app/ios/Pods/
+plassy-app/android/build/
+plassy-app/android/.gradle/
+plassy-app/.expo/
 
 # Web build artifacts
-fromfeed-frontend/.next/
+plassy-frontend/.next/
 
 # General transient/build outputs
 coverage/

@@ -8,12 +8,10 @@ This umbrella repository groups four GitHub projects as **Git submodules**. It o
 
 | Directory | Remote |
 |-----------|--------|
-| `fromfeed-app` | `git@github.com:Sweizeur/Plassy-App.git` |
-| `fromfeed-backend` | `git@github.com:Sweizeur/Plassy-Backend.git` |
-| `fromfeed-contracts` | `git@github.com:Sweizeur/Plassy-Contracts.git` |
-| `fromfeed-frontend` | `git@github.com:Sweizeur/Plassy-Fontend.git` |
-
-On disk the folders keep the `fromfeed-*` names; each submodule’s `origin` points to the **Plassy-* / Plassy-Contracts / Plassy-Fontend** repos above.
+| `plassy-app` | `git@github.com:Sweizeur/Plassy-App.git` |
+| `plassy-backend` | `git@github.com:Sweizeur/Plassy-Backend.git` |
+| `plassy-contracts` | `git@github.com:Sweizeur/Plassy-Contracts.git` |
+| `plassy-frontend` | `git@github.com:Sweizeur/Plassy-Fontend.git` |
 
 ## Clone
 
@@ -31,13 +29,13 @@ git submodule update --init --recursive
 ## Daily workflow
 
 1. Work inside a submodule as usual (`git pull`, commit, push to **that** repo’s `origin`).
-2. When you advance a submodule commit and want the umbrella repo to record the new pin: from the **workspace root**, `git add fromfeed-app` (etc.), commit, and push **FromFeed** (parent).
+2. When you advance a submodule commit and want the umbrella repo to record the new pin: from the **workspace root**, `git add plassy-app` (etc.), commit, and push **FromFeed** (parent).
 
 ```bash
-cd fromfeed-backend
+cd plassy-backend
 # … commit & git push origin main
 cd ..
-git add fromfeed-backend
+git add plassy-backend
 git commit -m "chore: bump backend submodule"
 git push origin main
 ```

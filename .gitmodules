@@ -1,12 +1,12 @@
-[submodule "fromfeed-app"]
-	path = fromfeed-app
+[submodule "plassy-app"]
+	path = plassy-app
 	url = git@github.com:Sweizeur/Plassy-App.git
-[submodule "fromfeed-backend"]
-	path = fromfeed-backend
+[submodule "plassy-backend"]
+	path = plassy-backend
 	url = git@github.com:Sweizeur/Plassy-Backend.git
-[submodule "fromfeed-contracts"]
-	path = fromfeed-contracts
+[submodule "plassy-contracts"]
+	path = plassy-contracts
 	url = git@github.com:Sweizeur/Plassy-Contracts.git
-[submodule "fromfeed-frontend"]
-	path = fromfeed-frontend
+[submodule "plassy-frontend"]
+	path = plassy-frontend
 	url = git@github.com:Sweizeur/Plassy-Fontend.git

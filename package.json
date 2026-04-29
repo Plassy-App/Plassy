@@ -1,5 +1,5 @@
 {
-  "name": "fromfeed",
+  "name": "plassy-workspace",
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
