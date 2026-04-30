@@ -1,0 +1,54 @@
+# Dependencies & package managers
+node_modules/
+**/node_modules/
+
+# Lockfiles (machine-generated)
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+bun.lockb
+
+# Editor / tooling (local prefs, hooks binary-ish)
+.vscode/
+plassy-frontend/.vscode/
+.husky/
+
+# Mobile — native trees & Expo
+plassy-app/android/
+plassy-app/ios/
+plassy-app/.expo/
+plassy-app/ios/Pods/
+plassy-app/android/build/
+plassy-app/android/.gradle/
+
+# Backend / contracts build & secrets
+plassy-backend/dist/
+plassy-backend/certs/
+plassy-contracts/dist/
+
+# CI / vendor inside contracts (workflows, templates)
+plassy-contracts/.github/
+
+# Next.js & web build
+plassy-frontend/.next/
+
+# Quality / analysis caches
+.scannerwork/
+
+# Repo-specific generated & caches (see .gitignore / .graphifyignore)
+graphify-out/
+.cursor/
+coverage/
+.turbo/
+.cache/
+tmp/
+
+# Minified / generated sources
+*.min.js
+*.min.css
+*.generated.py
+
+# Local env (keep .env.example etc. formattable)
+**/.env
+**/.env.local
+**/.env.*.local

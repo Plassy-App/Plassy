@@ -4,6 +4,7 @@
   "packageManager": "pnpm@9.15.0",
   "scripts": {
     "prepare": "husky",
+    "format": "prettier --write . --ignore-path .prettierignore",
     "lint": "pnpm --dir plassy-app run lint && bun --cwd plassy-backend run lint && bun --cwd plassy-contracts run lint && npm --prefix plassy-frontend run lint"
   },
   "devDependencies": {
