@@ -1,3 +1,6 @@
+# Local secrets (Sonar tokens, etc.)
+.env
+
 node_modules/
 graphify-out/
 .scannerwork/

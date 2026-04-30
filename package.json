@@ -5,7 +5,12 @@
   "scripts": {
     "prepare": "husky",
     "format": "prettier --write . --ignore-path .prettierignore",
-    "lint": "pnpm --dir plassy-app run lint && bun --cwd plassy-backend run lint && bun --cwd plassy-contracts run lint && npm --prefix plassy-frontend run lint"
+    "lint": "pnpm --dir plassy-app run lint && bun --cwd plassy-backend run lint && bun --cwd plassy-contracts run lint && npm --prefix plassy-frontend run lint",
+    "sonar:plassy-app": "dotenv -e .env -- sh -c 'cd plassy-app && sonar -Dsonar.host.url=\"${SONAR_HOST_URL:-http://localhost:9000}\" -Dsonar.token=\"$SONAR_TOKEN_PLASSY_APP\" -Dsonar.projectKey=Plessy-App'",
+    "sonar:plassy-backend": "dotenv -e .env -- sh -c 'cd plassy-backend && sonar -Dsonar.host.url=\"${SONAR_HOST_URL:-http://localhost:9000}\" -Dsonar.token=\"$SONAR_TOKEN_PLASSY_BACKEND\" -Dsonar.projectKey=Plassy-Backend'",
+    "sonar:plassy-contracts": "dotenv -e .env -- sh -c 'cd plassy-contracts && sonar -Dsonar.host.url=\"${SONAR_HOST_URL:-http://localhost:9000}\" -Dsonar.token=\"$SONAR_TOKEN_PLASSY_CONTRACTS\" -Dsonar.projectKey=Plassy-Contracts'",
+    "sonar:plassy-frontend": "dotenv -e .env -- sh -c 'cd plassy-frontend && sonar -Dsonar.host.url=\"${SONAR_HOST_URL:-http://localhost:9000}\" -Dsonar.token=\"$SONAR_TOKEN_PLASSY_FRONTEND\" -Dsonar.projectKey=Plassy-Frontend'",
+    "sonar:all": "pnpm run sonar:plassy-app && pnpm run sonar:plassy-backend && pnpm run sonar:plassy-contracts && pnpm run sonar:plassy-frontend"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.4",
