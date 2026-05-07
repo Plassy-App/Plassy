@@ -3,6 +3,7 @@ node_modules/
 **/node_modules/
 
 # Lockfiles (machine-generated)
+bun.lock
 pnpm-lock.yaml
 package-lock.json
 yarn.lock

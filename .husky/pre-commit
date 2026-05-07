@@ -1,2 +1,5 @@
 #!/usr/bin/env sh
-pnpm exec lint-staged
+set -e
+bun run format
+git add -u
+bunx lint-staged --config scripts/lint-staged.config.mjs

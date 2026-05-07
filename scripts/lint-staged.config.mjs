@@ -16,7 +16,7 @@ export default {
   "plassy-app/**/*.{js,jsx,ts,tsx}": (files) => {
     const rel = stripPrefix(files, "plassy-app");
     if (rel.length === 0) return [];
-    return `pnpm --dir plassy-app exec eslint --fix ${quote(rel)}`;
+    return `cd plassy-app && bunx eslint --fix ${quote(rel)}`;
   },
   "plassy-backend/**/*.ts": (files) => {
     const rel = stripPrefix(files, "plassy-backend");

@@ -49,10 +49,36 @@ git push origin main
 ## Install (root)
 
 ```bash
-pnpm install
+bun install
 ```
 
 Hooks (`lint-staged`) run from this root when you commit here.
+
+## Scripts (tout depuis la **racine**)
+
+Toujours `cd` dans le repo parapluie.
+
+- **`bun run help`** — imprime tous les scripts, groupés (**`bun run help app`** filtre par préfixe : `app`, `backend`, `sonar`, etc.).
+- Raccourcis fréquents : **`bun run dev:app`**, **`dev:backend`**, **`dev:web`**.
+
+| Commande                                        | Rôle                                            |
+| ----------------------------------------------- | ----------------------------------------------- |
+| `bun run app:start`                             | Metro / Expo                                    |
+| `bun run app:start:dev`                         | Expo + dev client                               |
+| `bun run app:build:dev` / `:simulator`          | `expo run:ios` (souvent simulateur par défaut)  |
+| `bun run app:build:dev:device -- -d <UDID>`     | Build debug sur l’iPhone                        |
+| `bun run app:build:release` / `:simulator`      | `expo run:ios --configuration Release`          |
+| `bun run app:build:release:device -- -d <UDID>` | Idem release sur appareil                       |
+| `bun run app:run:android`                       | `expo run:android`                              |
+| `bun run app:prebuild` / `app:prebuild:clean`   | Prebuild natif                                  |
+| `bun run app:ios:pods`                          | `pod install` + sync extension                  |
+| `bun run app:lint` / `app:test`                 | Qualité app                                     |
+| `bun run backend:dev` / `backend:start`         | Backend Bun                                     |
+| `bun run backend:build`                         | Prisma generate + `tsc` (hors fichiers de test) |
+| `bun run backend:db:*`                          | Prisma                                          |
+| `bun run contracts:build` / `frontend:dev` / …  | Autres paquets                                  |
+
+EAS cloud : `bun run app:eas:build:*`. Les sous-`package.json` ne déclarent plus les scripts de dev globaux (sauf hooks requis, ex. `eas-build-post-install` dans l’app) ; en revanche **chaque sous-module a son propre Husky** : après `bun install` / `npm install` **dans ce dossier**, un `git commit` y lance `lint-staged` + ESLint sur les fichiers stagés.
 
 ---
 
