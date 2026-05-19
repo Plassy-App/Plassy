@@ -33,4 +33,9 @@ export default {
     if (rel.length === 0) return [];
     return `cd plassy-frontend && bunx eslint --fix ${quote(rel)}`;
   },
+  "plassy-scraper/**/*.ts": (files) => {
+    const rel = stripPrefix(files, "plassy-scraper");
+    if (rel.length === 0) return [];
+    return `cd plassy-scraper && bunx eslint --fix ${quote(rel)}`;
+  },
 };
