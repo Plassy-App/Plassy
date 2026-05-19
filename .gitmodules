@@ -10,3 +10,6 @@
 [submodule "plassy-frontend"]
 	path = plassy-frontend
 	url = git@github.com:Sweizeur/Plassy-Fontend.git
+[submodule "plassy-scraper"]
+	path = plassy-scraper
+	url = git@github.com:Sweizeur/Plassy-Scraper.git

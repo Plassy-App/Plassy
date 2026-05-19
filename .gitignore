@@ -1,5 +1,18 @@
 # Local secrets (Sonar tokens, etc.)
 .env
+.env.local
+.env.*.local
+.envrc
+
+# Sensitive material — clés privées, certificats, identifiants SSH
+*.pem
+*.key
+*.p12
+*.crt
+*.cer
+id_rsa
+id_rsa.pub
+/certs/
 
 node_modules/
 graphify-out/

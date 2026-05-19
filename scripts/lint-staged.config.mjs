@@ -31,6 +31,6 @@ export default {
   "plassy-frontend/**/*.{js,jsx,ts,tsx,mjs,cjs}": (files) => {
     const rel = stripPrefix(files, "plassy-frontend");
     if (rel.length === 0) return [];
-    return `cd plassy-frontend && npx eslint --fix ${quote(rel)}`;
+    return `cd plassy-frontend && bunx eslint --fix ${quote(rel)}`;
   },
 };
