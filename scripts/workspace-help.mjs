@@ -56,7 +56,15 @@ for (const key of Object.keys(scripts).sort((a, b) => a.localeCompare(b))) {
   groups.get(g).push(key);
 }
 
-const order = ["Workspace", "App", "Backend", "Contracts", "Frontend", "Sonar"];
+const order = [
+  "Workspace",
+  "App",
+  "Backend",
+  "Contracts",
+  "Frontend",
+  "Scraper",
+  "Sonar",
+];
 
 const rest = [...groups.keys()].filter((k) => !order.includes(k)).sort();
 const orderedKeys = [...order.filter((k) => groups.has(k)), ...rest];

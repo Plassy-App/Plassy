@@ -12,5 +12,31 @@
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
   },
-  "editor.formatOnSave": false
+  "editor.formatOnSave": false,
+  "coverage-gutters.coverageFileNames": [
+    "lcov.info",
+    "cov.xml",
+    "coverage.xml",
+    "jacoco.xml",
+    "coverage.cobertura.xml"
+  ],
+  "coverage-gutters.manualCoverageFilePaths": [
+    "${workspaceFolder}/plassy-app/coverage/lcov.info",
+    "${workspaceFolder}/plassy-backend/coverage/lcov.info",
+    "${workspaceFolder}/plassy-contracts/coverage/lcov.info",
+    "${workspaceFolder}/plassy-frontend/coverage/lcov.info",
+    "${workspaceFolder}/plassy-scraper/coverage/lcov.info"
+  ],
+  "coverage-gutters.remotePathResolve": [
+    ["features/", "plassy-app/features/"],
+    ["lib/", "plassy-app/lib/"],
+    ["utils/", "plassy-app/utils/"],
+    ["components/", "plassy-app/components/"],
+    ["app/", "plassy-frontend/app/"],
+    ["components/", "plassy-frontend/components/"],
+    ["lib/", "plassy-frontend/lib/"]
+  ],
+  "coverage-gutters.showGutterCoverage": true,
+  "coverage-gutters.showLineCoverage": true,
+  "coverage-gutters.showRulerCoverage": true
 }
