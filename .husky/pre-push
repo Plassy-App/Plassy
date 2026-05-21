@@ -1,3 +1,5 @@
 #!/usr/bin/env sh
 set -e
+bun run typecheck
 bun run test
+bun run audit:high

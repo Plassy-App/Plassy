@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: bun
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: bun
+    directory: /plassy-app
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: bun
+    directory: /plassy-backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: bun
+    directory: /plassy-contracts
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

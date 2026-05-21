@@ -12,6 +12,12 @@ function quote(files) {
   return files.map((f) => `"${f.replace(/"/g, '\\"')}"`).join(" ");
 }
 
+function typecheckCommand(packageDir, files) {
+  const rel = stripPrefix(files, packageDir);
+  if (rel.length === 0) return null;
+  return `cd ${packageDir} && bun run typecheck`;
+}
+
 function jestCommands({ packageDir, files, extensions }) {
   const rel = stripPrefix(files, packageDir);
   if (rel.length === 0) return [];
@@ -41,8 +47,10 @@ export default {
   "plassy-app/**/*.{js,jsx,ts,tsx}": (files) => {
     const rel = stripPrefix(files, "plassy-app");
     if (rel.length === 0) return [];
+    const typecheck = typecheckCommand("plassy-app", files);
     return [
       `cd plassy-app && bunx eslint --fix ${quote(rel)}`,
+      ...(typecheck ? [typecheck] : []),
       ...jestCommands({
         packageDir: "plassy-app",
         files,
@@ -53,8 +61,10 @@ export default {
   "plassy-backend/**/*.ts": (files) => {
     const rel = stripPrefix(files, "plassy-backend");
     if (rel.length === 0) return [];
+    const typecheck = typecheckCommand("plassy-backend", files);
     return [
       `cd plassy-backend && bunx eslint --fix ${quote(rel)}`,
+      ...(typecheck ? [typecheck] : []),
       ...jestCommands({
         packageDir: "plassy-backend",
         files,
@@ -65,8 +75,10 @@ export default {
   "plassy-contracts/**/*.{ts,mts,cts}": (files) => {
     const rel = stripPrefix(files, "plassy-contracts");
     if (rel.length === 0) return [];
+    const typecheck = typecheckCommand("plassy-contracts", files);
     return [
       `cd plassy-contracts && bunx eslint --fix ${quote(rel)}`,
+      ...(typecheck ? [typecheck] : []),
       ...jestCommands({
         packageDir: "plassy-contracts",
         files,
@@ -77,8 +89,10 @@ export default {
   "plassy-frontend/**/*.{js,jsx,ts,tsx,mjs,cjs}": (files) => {
     const rel = stripPrefix(files, "plassy-frontend");
     if (rel.length === 0) return [];
+    const typecheck = typecheckCommand("plassy-frontend", files);
     return [
       `cd plassy-frontend && bunx eslint --fix ${quote(rel)}`,
+      ...(typecheck ? [typecheck] : []),
       ...jestCommands({
         packageDir: "plassy-frontend",
         files,
@@ -89,8 +103,10 @@ export default {
   "plassy-scraper/**/*.ts": (files) => {
     const rel = stripPrefix(files, "plassy-scraper");
     if (rel.length === 0) return [];
+    const typecheck = typecheckCommand("plassy-scraper", files);
     return [
       `cd plassy-scraper && bunx eslint --fix ${quote(rel)}`,
+      ...(typecheck ? [typecheck] : []),
       ...jestCommands({
         packageDir: "plassy-scraper",
         files,
