@@ -51,6 +51,11 @@ jobs:
           bun install --frozen-lockfile
           bun run test:coverage 2>&1 | tee coverage-output.txt
 
+      - name: Dependency audit (high severity)
+        if: matrix.package == 'plassy-backend'
+        working-directory: .
+        run: bun run audit:high
+
       - name: Coverage summary
         if: always()
         working-directory: ${{ matrix.package }}

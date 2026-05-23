@@ -5,8 +5,10 @@
   "scripts": {
     "prepare": "husky",
     "format": "prettier --write . --ignore-path .prettierignore",
+    "typecheck": "bun run --cwd plassy-app typecheck && bun run --cwd plassy-backend typecheck && bun run --cwd plassy-contracts typecheck && bun run --cwd plassy-frontend typecheck && bun run --cwd plassy-scraper typecheck",
     "test": "bun run --cwd plassy-app test && bun run --cwd plassy-backend test && bun run --cwd plassy-contracts test && bun run --cwd plassy-frontend test && bun run --cwd plassy-scraper test",
-    "test:coverage": "bun run --cwd plassy-app test:coverage && bun run --cwd plassy-backend test:coverage && bun run --cwd plassy-contracts test:coverage && bun run --cwd plassy-frontend test:coverage && bun run --cwd plassy-scraper test:coverage"
+    "test:coverage": "bun run --cwd plassy-app test:coverage && bun run --cwd plassy-backend test:coverage && bun run --cwd plassy-contracts test:coverage && bun run --cwd plassy-frontend test:coverage && bun run --cwd plassy-scraper test:coverage",
+    "audit:high": "bun audit --audit-level=high || npm audit --audit-level=high --workspaces --include-workspace-root"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.4",
