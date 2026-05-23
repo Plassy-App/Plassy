@@ -11,7 +11,7 @@
     "audit:high": "bun audit --audit-level=high || npm audit --audit-level=high --workspaces --include-workspace-root"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.2.4",
+    "@tailwindcss/postcss": "^4.3.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.4.3",
     "prettier": "3.8.3",
