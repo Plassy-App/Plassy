@@ -166,20 +166,19 @@ Voir `plassy-scraper/README.md` pour les détails (API HTTP, déploiement, threa
 
 ### Backend (`plassy-backend`)
 
-| Commande                                    | Rôle                                                    |
-| ------------------------------------------- | ------------------------------------------------------- |
-| `bun run backend:dev`                       | Lance le serveur Bun avec rechargement (`--watch`)      |
-| `bun run backend:start`                     | Lance le serveur Bun sans surveillance                  |
-| `bun run backend:build`                     | `prisma generate` puis `tsc --noEmit`                   |
-| `bun run backend:lint`                      | ESLint sur `src`                                        |
-| `bun run backend:typecheck`                 | `tsc --noEmit`                                          |
-| `bun run backend:test`                      | Jest                                                    |
-| `bun run backend:test:watch`                | Jest en mode surveillance                               |
-| `bun run backend:db:generate`               | `prisma generate`                                       |
-| `bun run backend:db:migrate`                | `prisma migrate dev`                                    |
-| `bun run backend:db:push`                   | `prisma db push`                                        |
-| `bun run backend:db:studio`                 | `prisma studio`                                         |
-| `bun run backend:script:fill-marker-emojis` | Script utilitaire : `bun scripts/fill-marker-emojis.ts` |
+| Commande                      | Rôle                                               |
+| ----------------------------- | -------------------------------------------------- |
+| `bun run backend:dev`         | Lance le serveur Bun avec rechargement (`--watch`) |
+| `bun run backend:start`       | Lance le serveur Bun sans surveillance             |
+| `bun run backend:build`       | `prisma generate` puis `tsc --noEmit`              |
+| `bun run backend:lint`        | ESLint sur `src`                                   |
+| `bun run backend:typecheck`   | `tsc --noEmit`                                     |
+| `bun run backend:test`        | Jest                                               |
+| `bun run backend:test:watch`  | Jest en mode surveillance                          |
+| `bun run backend:db:generate` | `prisma generate`                                  |
+| `bun run backend:db:migrate`  | `prisma migrate dev`                               |
+| `bun run backend:db:push`     | `prisma db push`                                   |
+| `bun run backend:db:studio`   | `prisma studio`                                    |
 
 ### Contrats partagés (`plassy-contracts`)
 
