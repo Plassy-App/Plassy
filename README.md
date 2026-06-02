@@ -1,25 +1,25 @@
 # Plassy — dépôt parapluie (espace de travail)
 
-**Dépôt parent :** [`git@github.com:Sweizeur/Plassy.git`](https://github.com/Sweizeur/Plassy)
+**Dépôt parent :** [`git@github.com:Plassy-App/Plassy.git`](https://github.com/Plassy-App/Plassy)
 
 Ce dépôt regroupe quatre projets GitHub en **sous-modules Git**. Il apporte uniquement l’outilage partagé à la racine (Husky, lint-staged, recommandations VS Code) ; l’historique du code applicatif reste dans chaque sous-module.
 
 ## Sous-modules
 
-| Dossier            | Dépôt                                                                                 |
-| ------------------ | ------------------------------------------------------------------------------------- |
-| `plassy-app`       | `git@github.com:Sweizeur/Plassy-App.git`                                              |
-| `plassy-backend`   | `git@github.com:Sweizeur/Plassy-Backend.git`                                          |
-| `plassy-contracts` | `git@github.com:Sweizeur/Plassy-Contracts.git`                                        |
-| `plassy-frontend`  | `git@github.com:Sweizeur/Plassy-Fontend.git`                                          |
-| `plassy-scraper`   | _Local pour l'instant — à promouvoir en `git@github.com:Sweizeur/Plassy-Scraper.git`_ |
+| Dossier            | Dépôt                                            |
+| ------------------ | ------------------------------------------------ |
+| `plassy-app`       | `git@github.com:Plassy-App/Plassy-App.git`       |
+| `plassy-backend`   | `git@github.com:Plassy-App/Plassy-Backend.git`   |
+| `plassy-contracts` | `git@github.com:Plassy-App/Plassy-Contracts.git` |
+| `plassy-frontend`  | `git@github.com:Plassy-App/Plassy-Fontend.git`   |
+| `plassy-scraper`   | `git@github.com:Plassy-App/Plassy-Scraper.git`   |
 
 _(Le dépôt du site marketing côté front s’appelle sur GitHub `Plassy-Fontend`.)_
 
 ## Cloner
 
 ```bash
-git clone --recurse-submodules git@github.com:Sweizeur/Plassy.git
+git clone --recurse-submodules git@github.com:Plassy-App/Plassy.git
 cd Plassy
 ```
 
