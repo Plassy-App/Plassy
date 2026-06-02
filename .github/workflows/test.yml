@@ -41,7 +41,7 @@ jobs:
         with:
           node-version: "20"
           registry-url: "https://npm.pkg.github.com"
-          scope: "@sweizeur"
+          scope: "@plassy-app"
 
       - name: Install and run tests with coverage
         working-directory: ${{ matrix.package }}
