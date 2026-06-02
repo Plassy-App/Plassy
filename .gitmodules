@@ -1,15 +1,15 @@
 [submodule "plassy-app"]
 	path = plassy-app
-	url = git@github.com:Sweizeur/Plassy-App.git
+	url = git@github.com:Plassy-App/Plassy-App.git
 [submodule "plassy-backend"]
 	path = plassy-backend
-	url = git@github.com:Sweizeur/Plassy-Backend.git
+	url = git@github.com:Plassy-App/Plassy-Backend.git
 [submodule "plassy-contracts"]
 	path = plassy-contracts
-	url = git@github.com:Sweizeur/Plassy-Contracts.git
+	url = git@github.com:Plassy-App/Plassy-Contracts.git
 [submodule "plassy-frontend"]
 	path = plassy-frontend
-	url = git@github.com:Sweizeur/Plassy-Fontend.git
+	url = git@github.com:Plassy-App/Plassy-Fontend.git
 [submodule "plassy-scraper"]
 	path = plassy-scraper
-	url = git@github.com:Sweizeur/Plassy-Scraper.git
+	url = git@github.com:Plassy-App/Plassy-Scraper.git
