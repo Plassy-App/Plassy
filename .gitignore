@@ -13,6 +13,7 @@
 id_rsa
 id_rsa.pub
 /certs/
+assets/
 
 node_modules/
 graphify-out/
