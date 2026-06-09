@@ -9,19 +9,27 @@ CONTRACTS_PKG="$ROOT/plassy-contracts/package.json"
 CONSUMERS=(plassy-backend plassy-scraper plassy-app)
 
 read_version() {
-  node -p "require('${1}').version"
+  node -p "require(process.argv[1]).version" "$1"
 }
 
 read_consumer_version() {
-  node -p "
-    const v = require('${1}').dependencies?.['@plassy-app/api-contracts'];
+  node -e "
+    const v = require(process.argv[1]).dependencies?.['@plassy-app/api-contracts'];
     if (!v) process.exit(2);
     process.stdout.write(String(v).replace(/^[\^~]/, ''));
-  "
+  " "$1"
 }
 
 version_lt() {
-  [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -1)" = "$1" ] && [ "$1" != "$2" ]
+  node -e "
+    const [v1, v2] = process.argv.slice(1).map((v) => v.split('.').map(Number));
+    for (let i = 0; i < Math.max(v1.length, v2.length); i++) {
+      const a = v1[i] || 0;
+      const b = v2[i] || 0;
+      if (a !== b) process.exit(a < b ? 0 : 1);
+    }
+    process.exit(1);
+  " "$1" "$2"
 }
 
 if [ ! -f "$CONTRACTS_PKG" ]; then
