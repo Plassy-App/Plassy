@@ -28,11 +28,10 @@ fi
 
 allowed=0
 while IFS= read -r -d '' envrc; do
-  dir="$(dirname "$envrc")"
-  if (cd "$dir" && direnv allow . >/dev/null 2>&1); then
+  if direnv allow "$envrc" >/dev/null 2>&1; then
     allowed=$((allowed + 1))
   fi
-done < <(find . -name .envrc -not -path '*/node_modules/*' -print0)
+done < <(find . \( -name node_modules -o -name .git \) -prune -o -name .envrc -print0)
 
 echo "[direnv] Allowed ${allowed} .envrc file(s) under ${root}."
 
