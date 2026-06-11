@@ -3,7 +3,8 @@
   "private": true,
   "packageManager": "bun@1.3.13",
   "scripts": {
-    "prepare": "husky",
+    "prepare": "husky && bash scripts/setup-direnv.sh",
+    "setup:direnv": "bash scripts/setup-direnv.sh",
     "format": "prettier --write . --ignore-path .prettierignore",
     "typecheck": "bun run --cwd plassy-app typecheck && bun run --cwd plassy-backend typecheck && bun run --cwd plassy-contracts typecheck && bun run --cwd plassy-frontend typecheck && bun run --cwd plassy-scraper typecheck",
     "test": "bun run --cwd plassy-app test && bun run --cwd plassy-backend test && bun run --cwd plassy-contracts test && bun run --cwd plassy-frontend test && bun run --cwd plassy-scraper test",

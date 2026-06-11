@@ -53,6 +53,18 @@ git push origin main
 bun install
 ```
 
+Cela exécute aussi **`scripts/setup-direnv.sh`** : création de `.envrc.local` depuis `.envrc.local.example` si besoin, puis `direnv allow` sur tous les `.envrc` du monorepo (racine + sous-modules). **Plus besoin de `direnv allow` dossier par dossier.**
+
+**Une fois par machine** (si ce n’est pas déjà fait) :
+
+```bash
+brew install direnv
+# ajouter à ~/.zshrc :
+eval "$(direnv hook zsh)"
+```
+
+**Une fois par clone** : éditer `.envrc.local` à la racine avec un PAT GitHub (`read:packages`), puis `bun run setup:direnv` (ou un simple `bun install`). Ne jamais committer ce fichier — seul le stub `.envrc` est versionné.
+
 Les hooks (`lint-staged`) s’exécutent depuis cette racine lorsque vous faites un commit **ici**.
 
 ## Scripts (toujours depuis la **racine** du parapluie)
