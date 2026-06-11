@@ -1,0 +1,3 @@
+# Copied to .envrc.local on first `bun install` (gitignored).
+# One-time machine setup: brew install direnv → eval "$(direnv hook zsh)" in ~/.zshrc
+export NODE_AUTH_TOKEN="REPLACE_WITH_github_pat"

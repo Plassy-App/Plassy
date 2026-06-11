@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# Re-trust .envrc files after branch checkout (e.g. when committed stubs change).
+bash scripts/setup-direnv.sh

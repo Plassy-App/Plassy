@@ -1,0 +1,3 @@
+# Placeholder examples — not real secrets
+*.example
+**/.envrc.local.example

@@ -2,7 +2,8 @@
 .env
 .env.local
 .env.*.local
-.envrc
+# PAT GitHub Packages — secrets only in gitignored root .envrc.local (committed .envrc is a stub)
+/.envrc.local
 
 # Sensitive material — clés privées, certificats, identifiants SSH
 *.pem

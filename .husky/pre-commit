@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 set -e
+bash scripts/check-staged-secrets.sh
 bun run format
 git add -u
 bunx lint-staged --config scripts/lint-staged.config.mjs
