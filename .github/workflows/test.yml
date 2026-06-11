@@ -10,6 +10,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # gitleaks/gitleaks-action@v2+ requires GITLEAKS_LICENSE for org repos.
+  # The MIT-licensed gitleaks CLI is free — install the binary directly.
   gitleaks:
     runs-on: ubuntu-latest
     steps:
@@ -19,9 +21,23 @@ jobs:
           submodules: recursive
           token: ${{ secrets.SUBMODULES_PAT }}
 
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install Gitleaks
+        run: |
+          GITLEAKS_VERSION="8.30.1"
+          curl -sSLf "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            -o /tmp/gitleaks.tgz
+          tar -xzf /tmp/gitleaks.tgz -C /tmp gitleaks
+          sudo install -m 0755 /tmp/gitleaks /usr/local/bin/gitleaks
+
+      - name: Scan for secrets
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            gitleaks detect --source . \
+              --log-opts="${{ github.event.pull_request.base.sha }}..${{ github.sha }}" \
+              --verbose --redact
+          else
+            gitleaks detect --source . --verbose --redact
+          fi
 
   contracts-version:
     runs-on: ubuntu-latest
