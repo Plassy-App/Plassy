@@ -222,8 +222,8 @@ After a submodule PR is merged on GitHub, the latest commit already exists on th
 
 ```bash
 cd plassy-app  # or another submodule
-git checkout preview
-git pull origin preview
+git fetch origin
+git checkout origin/preview
 cd ..
 git add plassy-app
 git commit -m "chore: bump plassy-app submodule (preview)"

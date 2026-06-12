@@ -8,7 +8,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 for pkg in plassy-backend plassy-scraper plassy-app; do
   echo "→ $pkg: @plassy-app/api-contracts@${VERSION}"
-  (cd "$ROOT/$pkg" && bun add "@plassy-app/api-contracts@${VERSION}")
+  (cd "$ROOT/$pkg" && bun add --exact "@plassy-app/api-contracts@${VERSION}")
 done
 
 echo ""
