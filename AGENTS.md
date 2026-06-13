@@ -69,13 +69,15 @@ flowchart TD
 1. **Initialize submodules** if needed: `git submodule update --init --recursive`.
 2. **Create a branch** per touched repo: `cursor/<description>-7c6d` (from `preview` for app/backend/scraper, from `dev` for contracts).
 3. **Implement** changes following each repo's conventions.
-4. **Open draft PRs**:
+4. **Commit and push** on each touched branch (`git push -u origin <branch>`).
+5. **Open draft PRs** (mandatory — never leave a task with only a pushed branch):
    - `plassy-app` → base `preview`
    - `plassy-backend` → base `preview`
    - `plassy-scraper` → base `preview`
    - `plassy-contracts` → base `dev`
-5. **Describe in each PR**: scope, merge order, expected testing actions.
-6. **Wait for human merge** — do not merge unless explicitly instructed.
+   - umbrella `Plassy` → base `dev` or `main` (only when root files change)
+6. **Describe in each PR**: scope, merge order, expected testing actions.
+7. **Wait for human merge** — do not merge unless explicitly instructed.
 
 After merge to `preview` (app):
 
@@ -211,10 +213,32 @@ Examples: `cursor/fix-login-preview-7c6d`, `cursor/add-place-filter-7c6d`.
 
 ### PRs
 
+- **Always open a draft PR** after committing and pushing — a pushed branch alone is not a complete deliverable.
 - Always **draft** unless instructed otherwise.
 - One PR per touched repo.
 - Clear title in English (repo convention).
 - PR body: summary, impacted repos, merge order, testing instructions.
+
+#### Opening PRs in submodules
+
+Code changes live in **submodule repos** (`plassy-app`, `plassy-backend`, etc.), not in the umbrella `Plassy` repo. Run git and PR commands **from inside the submodule**:
+
+```bash
+cd plassy-app   # or plassy-backend, plassy-scraper, plassy-contracts
+git push -u origin cursor/my-fix-7c6d
+gh pr create --draft --base preview --head cursor/my-fix-7c6d \
+  --title "fix: short description" \
+  --body "## Summary\n..."
+```
+
+| Repo | PR base branch |
+|------|----------------|
+| `plassy-app` | `preview` |
+| `plassy-backend` | `preview` |
+| `plassy-scraper` | `preview` |
+| `plassy-contracts` | `dev` |
+
+The umbrella `Plassy` repo only needs a PR when root files change (e.g. `AGENTS.md`, root scripts).
 
 ### Umbrella monorepo
 
@@ -236,7 +260,7 @@ Only do this when explicitly requested for the umbrella repo.
 
 At the end of a preview task:
 
-1. **Branches + draft PRs** on each concerned repo.
+1. **Branches + draft PRs** on each concerned repo — confirm each PR URL before closing the task.
 2. **Contracts tag** published if applicable (prerelease version).
 3. **Merge instructions**: order when multiple PRs exist (contracts → backend/scraper → app).
 4. **After merge** (if requested): verify the EAS workflow via MCP and confirm OTA or TestFlight build.
