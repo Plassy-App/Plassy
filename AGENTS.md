@@ -226,9 +226,9 @@ Code changes live in **submodule repos** (`plassy-app`, `plassy-backend`, etc.),
 ```bash
 cd plassy-app   # or plassy-backend, plassy-scraper, plassy-contracts
 git push -u origin cursor/my-fix-7c6d
-gh pr create --draft --base preview --head cursor/my-fix-7c6d \
+gh pr create --draft --base <base-branch> --head cursor/my-fix-7c6d \
   --title "fix: short description" \
-  --body "## Summary\n..."
+  --body "## Summary"
 ```
 
 | Repo | PR base branch |
