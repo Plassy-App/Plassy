@@ -280,6 +280,17 @@ At the end of a preview task:
 | Bump `main` with a `-preview` version | Keeps production isolated from prereleases |
 | Merge without review unless explicitly asked | Human gate is intentional |
 
+## Git / PR troubleshooting
+
+| Error | Likely cause | Fix |
+|-------|--------------|-----|
+| `Resource not accessible by integration` on `gh pr create` in a submodule | Cursor GitHub App not installed on that submodule repo | Install the app on `Plassy-App/Plassy-App` (and other submodules), or open the PR manually via the compare URL |
+| PR tool targets umbrella repo only | `ManagePullRequest` runs against `Plassy`, not submodules | Use `gh pr create` from inside the submodule (`cd plassy-app`) |
+
+Fallback compare URL (replace `<branch>`):
+
+`https://github.com/Plassy-App/Plassy-App/compare/preview...<branch>`
+
 ## EAS workflow troubleshooting
 
 | Error | Likely cause | Fix |
