@@ -21,7 +21,7 @@ Exemple de titre : `Onboarding : clarifier la proposition de valeur`
 | `project` | `Version 1` (sauf travail post-V1 explicite) |
 | `team` | Implémentation → `Plassy - Dev` · specs visuelles → `Plassy - Design` |
 | `milestone` | Exactement **un** (voir tableau) |
-| `labels` | **1–2** labels workspace — jamais `Design` (utiliser `UI`) |
+| `labels` | **1–2** labels workspace — visuel → `Design` (+ `Feature` ou `Improvement`) |
 | `assignee` | Dev → Anthony · Design → Raphael TCHIFTBACHIAN |
 
 ### Milestones
@@ -40,7 +40,7 @@ Hésitation Feedback vs Stabilisation : **wording/UX** → Feedback · **comport
 | Combinaison | Usage |
 |-------------|--------|
 | `UX` + `Improvement` ou `Feature` | Messages métier, flows |
-| `UI` + `Improvement` ou `Feature` | Visuel, composants, Figma |
+| `Design` + `Improvement` ou `Feature` | Visuel, composants, Figma, identité |
 | `Backend` + `Bug` ou `Improvement` | API, scraper, sécurité |
 | `Bug` (+ `Backend` si pertinent) | Défaut |
 
@@ -67,4 +67,4 @@ Hésitation Feedback vs Stabilisation : **wording/UX** → Feedback · **comport
 
 ## Interdit
 
-Issues V1 sans `Version 1` / milestone / labels · specs design sur `Plassy - Dev` · label `Design` · nouveau projet fourre-tout.
+Issues V1 sans `Version 1` / milestone / labels · specs design sur `Plassy - Dev` · label `UI` (utiliser `Design`) · nouveau projet fourre-tout.

@@ -308,7 +308,7 @@ Fallback compare URL (replace `<branch>`):
 When creating or updating a task, follow **`.cursor/rules/linear-task-creation.mdc`**:
 
 - **Titre et description en français**
-- Project `Version 1`, milestone, labels, team Dev/Design
+- Project `Version 1`, milestone, labels (`UX`, `Design`, `Backend`, … — pas `UI`), team Dev/Design
 - Linear MCP (`save_issue`, …)
 
 Project board: [Version 1](https://linear.app/plassy/project/version-1-ee36a8c46464)
