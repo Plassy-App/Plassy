@@ -1,0 +1,70 @@
+---
+description: Création et mise à jour de tâches Linear (Version 1, contenu en français)
+alwaysApply: true
+---
+
+# Tâches Linear — Plassy
+
+S'applique quand l'utilisateur demande de **créer**, **modifier** ou **trier** une tâche / issue / ticket. Utiliser le **Linear MCP** (`save_issue`, `list_issues`, `get_project`).
+
+## Langue
+
+- **Titre et description en français** (sections `## Problème`, `## Déjà en place`, etc.).
+- Chemins de fichiers et identifiants code restent en anglais (`plassy-app/features/...`).
+
+Exemple de titre : `Onboarding : clarifier la proposition de valeur`
+
+## Champs obligatoires (`save_issue`)
+
+| Champ | Règle |
+|-------|--------|
+| `project` | `Version 1` (sauf travail post-V1 explicite) |
+| `team` | Implémentation → `Plassy - Dev` · specs visuelles → `Plassy - Design` |
+| `milestone` | Exactement **un** (voir tableau) |
+| `labels` | **1–2** labels workspace — jamais `Design` (utiliser `UI`) |
+| `assignee` | Dev → Anthony · Design → Raphael TCHIFTBACHIAN |
+
+### Milestones
+
+| Milestone | Quand |
+|-----------|--------|
+| Feedback testeurs | Copy, onboarding, empty states, retours testeurs |
+| Stabilisation preview | Bugs, sécurité, rate limits, polish technique |
+| Design V1 | Logo, DA, tokens, specs Figma avant implémentation Dev |
+| Launch App Store | Assets store, build prod, soumission, compliance |
+
+Hésitation Feedback vs Stabilisation : **wording/UX** → Feedback · **comportement cassé / infra** → Stabilisation.
+
+### Labels
+
+| Combinaison | Usage |
+|-------------|--------|
+| `UX` + `Improvement` ou `Feature` | Messages métier, flows |
+| `UI` + `Improvement` ou `Feature` | Visuel, composants, Figma |
+| `Backend` + `Bug` ou `Improvement` | API, scraper, sécurité |
+| `Bug` (+ `Backend` si pertinent) | Défaut |
+
+## Template description
+
+```markdown
+## Problème
+(pourquoi c'est important)
+
+## Déjà en place (code)
+(fichiers / comportement — chercher dans le repo d'abord)
+
+## À faire
+- [ ] …
+
+## Fichiers clés
+- `path/to/file.ts`
+```
+
+## Après création
+
+- Retourner **URL Linear** + identifiant (`PLA1-XX` / `PLA2-XX`).
+- Lier une PR existante via `links` si disponible.
+
+## Interdit
+
+Issues V1 sans `Version 1` / milestone / labels · specs design sur `Plassy - Dev` · label `Design` · nouveau projet fourre-tout.

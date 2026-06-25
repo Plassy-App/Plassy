@@ -19,5 +19,8 @@ assets/
 node_modules/
 graphify-out/
 .scannerwork/
-.cursor/
+# Cursor local state — keep rules versioned for the team
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
 .DS_Store

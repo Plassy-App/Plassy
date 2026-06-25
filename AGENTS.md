@@ -269,7 +269,7 @@ At the end of a preview task:
    - Native: "Merge complete — new TestFlight build in ~20 min"
    - Backend: "Preview API redeployed on Railway"
 
-When the user also asked to **create a Linear task**, include the issue URL and confirm project / milestone / labels match the [Linear section](#linear-issue-tracking).
+When the user also asked to **create a Linear task**, include the issue URL; follow `.cursor/rules/linear-task-creation.mdc` (French title + description).
 
 ## Prohibited actions
 
@@ -305,97 +305,13 @@ Fallback compare URL (replace `<branch>`):
 
 ## Linear (issue tracking)
 
-Use the **Linear MCP** (`save_issue`, `list_issues`, `get_project`, …) when the user asks to create, update, or triage a **task / issue / ticket**. Follow the workspace structure below — do not invent ad-hoc projects, teams, or labels.
+When creating or updating a task, follow **`.cursor/rules/linear-task-creation.mdc`**:
 
-### Workspace layout
+- **Titre et description en français**
+- Project `Version 1`, milestone, labels, team Dev/Design
+- Linear MCP (`save_issue`, …)
 
-| Concept          | Value                                                               |
-| ---------------- | ------------------------------------------------------------------- |
-| **Project**      | `Version 1` — all in-scope V1 work                                  |
-| **Team Dev**     | `Plassy - Dev` (key `PLA1`) — app + backend implementation          |
-| **Team Design**  | `Plassy - Design` (key `PLA2`) — visual specs, logo, DA, UI handoff |
-| **Project lead** | Anthony                                                             |
-
-**Out of scope for `Version 1`:** post-launch features, non-blocking refactors (see project description on Linear). Create without a project only if explicitly post-V1.
-
-### Milestones (pick exactly one)
-
-| Milestone                 | When to use                                                                        |
-| ------------------------- | ---------------------------------------------------------------------------------- |
-| **Feedback testeurs**     | Copy, onboarding, empty states, user-facing messages, tester feedback              |
-| **Stabilisation preview** | Bugs, security, rate limits, technical polish before wider TestFlight              |
-| **Design V1**             | Logo, DA, design tokens, filter/card visual specs — work **before** Dev implements |
-| **Launch App Store**      | Store assets, production build, submission, privacy / compliance blockers          |
-
-If unsure between **Feedback testeurs** and **Stabilisation preview**: user-visible wording/UX → Feedback; broken behaviour or infra → Stabilisation.
-
-### Labels (mandatory)
-
-Use workspace labels — **never** create duplicates.
-
-| Label         | Use with                           | Meaning                                  |
-| ------------- | ---------------------------------- | ---------------------------------------- |
-| `UX`          | `Improvement` or `Feature`         | Copy, flows, onboarding, messages métier |
-| `UI`          | `Improvement` or `Feature`         | Visual design, components, specs Figma   |
-| `Backend`     | `Bug` or `Improvement`             | API, scraper, security, infra            |
-| `Bug`         | alone or + `Backend`               | Defect                                   |
-| `Feature`     | alone or + `UX` / `UI`             | New capability                           |
-| `Improvement` | alone or + `UX` / `UI` / `Backend` | Enhancement to existing behaviour        |
-
-Examples: UX copy fix → `UX` + `Improvement`. Security fix → `Backend` + `Bug`. New logo → `UI` + `Feature`.
-
-### Creating an issue (agent checklist)
-
-When the user asks to **create a task**:
-
-1. **Title** — French, action-oriented (same style as existing issues, e.g. `Onboarding : clarifier la proposition de valeur`).
-2. **Team** — per routing table above.
-3. **Project** — `Version 1` (unless explicitly out of scope).
-4. **Milestone** — one from the table above.
-5. **Labels** — 1–2 from the table above; never `Design`.
-6. **Priority** — `Urgent` / `High` only if blocking release or preview; default `Medium` or `Low`.
-7. **Description** — Markdown with this structure:
-
-   ```markdown
-   ## Problème
-
-   (why this matters for users or release)
-
-   ## Déjà en place (code)
-
-   (relevant files / behaviour — search the repo first)
-
-   ## À faire
-
-   - [ ] …
-
-   ## Fichiers clés
-
-   - `path/to/file.ts`
-   ```
-
-8. **Links** — if a PR already exists, attach it via `links` on `save_issue`.
-9. **Confirm** — return the Linear issue URL and identifier (e.g. `PLA1-17`).
-
-Use `save_issue` with at minimum: `title`, `team`, `project`, `milestone`, `labels`, `description`. Set `assignee` when obvious from the routing table.
-
-### Updating an issue
-
-When moving work forward (preview task done, PR opened):
-
-- Set status via `state` if the user asks (e.g. `In Progress`, `Testing`).
-- Keep `project`, `milestone`, and labels consistent — fix mis-tagged issues instead of leaving them orphan.
-- Link PRs to the issue (`links`); branch names often follow `sweizeur/pla1-XX-…`.
-
-### What not to do
-
-| Action                                        | Why                                           |
-| --------------------------------------------- | --------------------------------------------- |
-| Create issues without `Version 1` for V1 work | Breaks milestone progress and cross-team view |
-| Use label `Design`                            | Renamed to `UI`                               |
-| Put design specs on `Plassy - Dev`            | Design team owns visual deliverables          |
-| Skip milestone or labels                      | Makes project views useless                   |
-| Create a second catch-all project             | `Version 1` is the single release container   |
+Project board: [Version 1](https://linear.app/plassy/project/version-1-ee36a8c46464)
 
 ## References
 
