@@ -20,26 +20,16 @@ Exemple de titre : `Onboarding : clarifier la proposition de valeur`
 |-------|--------|
 | `project` | `Version 1` (sauf travail post-V1 explicite) |
 | `team` | Implémentation → `Plassy - Dev` · specs visuelles → `Plassy - Design` |
-| `milestone` | Exactement **un** (voir tableau) |
-| `labels` | **1–2** labels workspace — visuel → `Design` (+ `Feature` ou `Improvement`) |
+| `labels` | **1–2** labels workspace (voir tableau) |
 | `assignee` | Dev → Anthony · Design → Raphael TCHIFTBACHIAN |
 
-### Milestones
-
-| Milestone | Quand |
-|-----------|--------|
-| Feedback testeurs | Copy, onboarding, empty states, retours testeurs |
-| Stabilisation preview | Bugs, sécurité, rate limits, polish technique |
-| Design V1 | Logo, DA, tokens, specs Figma avant implémentation Dev |
-| Launch App Store | Assets store, build prod, soumission, compliance |
-
-Hésitation Feedback vs Stabilisation : **wording/UX** → Feedback · **comportement cassé / infra** → Stabilisation.
+**Pas de milestones** — petite équipe, le projet + labels suffisent. Ne pas en créer ni en assigner.
 
 ### Labels
 
 | Combinaison | Usage |
 |-------------|--------|
-| `UX` + `Improvement` ou `Feature` | Messages métier, flows |
+| `UX` + `Improvement` ou `Feature` | Messages métier, flows, onboarding |
 | `Design` + `Improvement` ou `Feature` | Visuel, composants, Figma, identité |
 | `Backend` + `Bug` ou `Improvement` | API, scraper, sécurité |
 | `Bug` (+ `Backend` si pertinent) | Défaut |
@@ -67,4 +57,4 @@ Hésitation Feedback vs Stabilisation : **wording/UX** → Feedback · **comport
 
 ## Interdit
 
-Issues V1 sans `Version 1` / milestone / labels · specs design sur `Plassy - Dev` · label `UI` (utiliser `Design`) · nouveau projet fourre-tout.
+Issues V1 sans `Version 1` ou sans labels · specs design sur `Plassy - Dev` · label `UI` (utiliser `Design`) · nouveau projet fourre-tout · milestones.

@@ -308,7 +308,7 @@ Fallback compare URL (replace `<branch>`):
 When creating or updating a task, follow **`.cursor/rules/linear-task-creation.mdc`**:
 
 - **Titre et description en français**
-- Project `Version 1`, milestone, labels (`UX`, `Design`, `Backend`, … — pas `UI`), team Dev/Design
+- Project `Version 1`, labels (`UX`, `Design`, `Backend`, … — pas `UI`), team Dev/Design
 - Linear MCP (`save_issue`, …)
 
 Project board: [Version 1](https://linear.app/plassy/project/version-1-ee36a8c46464)
@@ -324,7 +324,7 @@ Project board: [Version 1](https://linear.app/plassy/project/version-1-ee36a8c46
 | `plassy-contracts/MIGRATION.md`                                                | Contracts release cycle               |
 | `plassy-contracts/.github/workflows/publish.yml`                               | npm publish (stable + preview tags)   |
 | `README.md`                                                                    | Monorepo setup, root scripts          |
-| [Linear — Version 1](https://linear.app/plassy/project/version-1-ee36a8c46464) | V1 milestones, Dev + Design issues    |
+| [Linear — Version 1](https://linear.app/plassy/project/version-1-ee36a8c46464) | V1 backlog, Dev + Design issues       |
 
 ## Quick checklist by task type
 
