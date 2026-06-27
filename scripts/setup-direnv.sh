@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Trust all committed .envrc files (source_up stubs + optional root secrets file).
+# Trust only git-tracked .envrc files (source_up stubs + optional root secrets file).
+# Untracked .envrc files are skipped to prevent supply-chain attacks via malicious PRs.
 # Invoked from `bun install` (prepare) and git post-checkout — no manual `direnv allow` per folder.
 set -euo pipefail
 
@@ -28,6 +29,10 @@ fi
 
 allowed=0
 while IFS= read -r -d '' envrc; do
+  if ! git ls-files --error-unmatch "$envrc" >/dev/null 2>&1; then
+    echo "[direnv] Skipping untracked .envrc: $envrc" >&2
+    continue
+  fi
   if direnv allow "$envrc" >/dev/null 2>&1; then
     allowed=$((allowed + 1))
   fi
