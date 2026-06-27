@@ -13,35 +13,35 @@ When a preview task is requested:
 
 ## Preview architecture
 
-| Layer | Repo | PR target branch | Deployment | URL / channel |
-|-------|------|------------------|------------|---------------|
-| **Mobile app** | `plassy-app` | `preview` | EAS Workflow on push to `preview` | OTA channel `preview`, TestFlight |
-| **Backend API** | `plassy-backend` | `preview` | Railway auto-deploy on push to `preview` | `https://plassy-backend-preview.up.railway.app` |
-| **Scraper** | `plassy-scraper` | `preview` | Railway auto-deploy on push to `preview` | Private Railway network (`*.railway.internal`) |
-| **Contracts** | `plassy-contracts` | `dev` | npm tag → GitHub Packages | No `preview` branch |
-| **Web frontend** | `plassy-frontend` | `dev` or `main` | Out of mobile preview scope | — |
-| **Umbrella** | `Plassy` (root) | `main` / `dev` | CI only | — |
+| Layer            | Repo               | PR target branch | Deployment                               | URL / channel                                   |
+| ---------------- | ------------------ | ---------------- | ---------------------------------------- | ----------------------------------------------- |
+| **Mobile app**   | `plassy-app`       | `preview`        | EAS Workflow on push to `preview`        | OTA channel `preview`, TestFlight               |
+| **Backend API**  | `plassy-backend`   | `preview`        | Railway auto-deploy on push to `preview` | `https://plassy-backend-preview.up.railway.app` |
+| **Scraper**      | `plassy-scraper`   | `preview`        | Railway auto-deploy on push to `preview` | Private Railway network (`*.railway.internal`)  |
+| **Contracts**    | `plassy-contracts` | `dev`            | npm tag → GitHub Packages                | No `preview` branch                             |
+| **Web frontend** | `plassy-frontend`  | `dev` or `main`  | Out of mobile preview scope              | —                                               |
+| **Umbrella**     | `Plassy` (root)    | `main` / `dev`   | CI only                                  | —                                               |
 
 ### Environments
 
-| Env | App backend URL | Railway branch | Data |
-|-----|-----------------|----------------|------|
-| **Preview** | `EXPO_PUBLIC_BACKEND_URL=https://plassy-backend-preview.up.railway.app` | `preview` | Isolated Neon preview DB, Redis/S3 preview |
-| **Production** | `https://api.plassy.fr` | `main` | Production |
+| Env            | App backend URL                                                         | Railway branch | Data                                       |
+| -------------- | ----------------------------------------------------------------------- | -------------- | ------------------------------------------ |
+| **Preview**    | `EXPO_PUBLIC_BACKEND_URL=https://plassy-backend-preview.up.railway.app` | `preview`      | Isolated Neon preview DB, Redis/S3 preview |
+| **Production** | `https://api.plassy.fr`                                                 | `main`         | Production                                 |
 
 **Never** point the `preview` profile at `api.plassy.fr`. **Never** use ngrok in an EAS preview build (blocked in code).
 
 ### Expo / EAS
 
-| Item | Value |
-|------|-------|
-| Expo org | `@plassy/plassy` |
-| Project | `@plassy/plassy` (`extra.eas.projectId`: `8be05f22-a61c-4959-a5d6-a526667fc22a`) |
-| `app.json` → `owner` | `"plassy"` (must match the Expo org) |
-| Connected GitHub repo | `Plassy-App/Plassy-App` |
-| Build profile | `preview` (`distribution: store`, `environment: preview`, channel `preview`) |
-| Workflow | `.eas/workflows/preview-deploy.yml` (trigger `on.push: preview`) |
-| TestFlight submit | `submit.preview.ios.ascAppId`: `6762057582` |
+| Item                  | Value                                                                            |
+| --------------------- | -------------------------------------------------------------------------------- |
+| Expo org              | `@plassy/plassy`                                                                 |
+| Project               | `@plassy/plassy` (`extra.eas.projectId`: `8be05f22-a61c-4959-a5d6-a526667fc22a`) |
+| `app.json` → `owner`  | `"plassy"` (must match the Expo org)                                             |
+| Connected GitHub repo | `Plassy-App/Plassy-App`                                                          |
+| Build profile         | `preview` (`distribution: store`, `environment: preview`, channel `preview`)     |
+| Workflow              | `.eas/workflows/preview-deploy.yml` (trigger `on.push: preview`)                 |
+| TestFlight submit     | `submit.preview.ios.ascAppId`: `6762057582`                                      |
 
 ## Standard flow (one feature request)
 
@@ -69,13 +69,15 @@ flowchart TD
 1. **Initialize submodules** if needed: `git submodule update --init --recursive`.
 2. **Create a branch** per touched repo: `cursor/<description>-7c6d` (from `preview` for app/backend/scraper, from `dev` for contracts).
 3. **Implement** changes following each repo's conventions.
-4. **Open draft PRs**:
+4. **Commit and push** on each touched branch (`git push -u origin <branch>`).
+5. **Open draft PRs** (mandatory — never leave a task with only a pushed branch):
    - `plassy-app` → base `preview`
    - `plassy-backend` → base `preview`
    - `plassy-scraper` → base `preview`
    - `plassy-contracts` → base `dev`
-5. **Describe in each PR**: scope, merge order, expected testing actions.
-6. **Wait for human merge** — do not merge unless explicitly instructed.
+   - umbrella `Plassy` → base `dev` or `main` (only when root files change)
+6. **Describe in each PR**: scope, merge order, expected testing actions.
+7. **Wait for human merge** — do not merge unless explicitly instructed.
 
 After merge to `preview` (app):
 
@@ -131,12 +133,12 @@ Always pin the exact version: `"@plassy-app/api-contracts": "3.5.0-preview.1"` (
 
 ### API coordination
 
-| Change type | Order |
-|-------------|-------|
-| Optional field added | Backend deploy then app update — usually tolerant |
-| Required field / stricter validation | **Backend first**, then app |
-| New route | Backend deploy, then app with new client |
-| Field removed / renamed | Coordinated deploy immediately |
+| Change type                          | Order                                             |
+| ------------------------------------ | ------------------------------------------------- |
+| Optional field added                 | Backend deploy then app update — usually tolerant |
+| Required field / stricter validation | **Backend first**, then app                       |
+| New route                            | Backend deploy, then app with new client          |
+| Field removed / renamed              | Coordinated deploy immediately                    |
 
 ## Mobile app (`plassy-app`)
 
@@ -144,10 +146,10 @@ Always pin the exact version: `"@plassy-app/api-contracts": "3.5.0-preview.1"` (
 
 The `.eas/workflows/preview-deploy.yml` workflow decides automatically via **fingerprint**:
 
-| Situation | Workflow result | Tester action |
-|-----------|-----------------|---------------|
-| JS/TS only (screens, logic, API client) | `type: update` on channel `preview` | Reopen the app |
-| Native change or no compatible cloud build | `type: build` + `type: submit` | Install from TestFlight |
+| Situation                                  | Workflow result                     | Tester action           |
+| ------------------------------------------ | ----------------------------------- | ----------------------- |
+| JS/TS only (screens, logic, API client)    | `type: update` on channel `preview` | Reopen the app          |
+| Native change or no compatible cloud build | `type: build` + `type: submit`      | Install from TestFlight |
 
 Files that are typically **native** (rebuild required):
 
@@ -174,14 +176,14 @@ Configured on expo.dev → Environment variables → `preview`:
 
 The agent can use the Expo MCP (already authenticated) for:
 
-| Action | MCP tool |
-|--------|----------|
-| List / track builds | `build_list`, `build_info`, `build_logs` |
-| Trigger a manual build | `build_run` |
-| Submit to TestFlight | `build_submit` |
-| Run / track workflow | `workflow_run`, `workflow_list`, `workflow_info`, `workflow_logs` |
-| Validate workflow YAML | `workflow_validate` |
-| TestFlight crashes / feedback | `testflight_crashes`, `testflight_feedback` |
+| Action                        | MCP tool                                                          |
+| ----------------------------- | ----------------------------------------------------------------- |
+| List / track builds           | `build_list`, `build_info`, `build_logs`                          |
+| Trigger a manual build        | `build_run`                                                       |
+| Submit to TestFlight          | `build_submit`                                                    |
+| Run / track workflow          | `workflow_run`, `workflow_list`, `workflow_info`, `workflow_logs` |
+| Validate workflow YAML        | `workflow_validate`                                               |
+| TestFlight crashes / feedback | `testflight_crashes`, `testflight_feedback`                       |
 
 **Manual OTA** (if needed outside the workflow): no dedicated MCP tool — use the CLI:
 
@@ -211,10 +213,32 @@ Examples: `cursor/fix-login-preview-7c6d`, `cursor/add-place-filter-7c6d`.
 
 ### PRs
 
+- **Always open a draft PR** after committing and pushing — a pushed branch alone is not a complete deliverable.
 - Always **draft** unless instructed otherwise.
 - One PR per touched repo.
 - Clear title in English (repo convention).
 - PR body: summary, impacted repos, merge order, testing instructions.
+
+#### Opening PRs in submodules
+
+Code changes live in **submodule repos** (`plassy-app`, `plassy-backend`, etc.), not in the umbrella `Plassy` repo. Run git and PR commands **from inside the submodule**:
+
+```bash
+cd plassy-app   # or plassy-backend, plassy-scraper, plassy-contracts
+git push -u origin cursor/my-fix-7c6d
+gh pr create --draft --base <base-branch> --head cursor/my-fix-7c6d \
+  --title "fix: short description" \
+  --body "## Summary"
+```
+
+| Repo               | PR base branch |
+| ------------------ | -------------- |
+| `plassy-app`       | `preview`      |
+| `plassy-backend`   | `preview`      |
+| `plassy-scraper`   | `preview`      |
+| `plassy-contracts` | `dev`          |
+
+The umbrella `Plassy` repo only needs a PR when root files change (e.g. `AGENTS.md`, root scripts).
 
 ### Umbrella monorepo
 
@@ -236,7 +260,7 @@ Only do this when explicitly requested for the umbrella repo.
 
 At the end of a preview task:
 
-1. **Branches + draft PRs** on each concerned repo.
+1. **Branches + draft PRs** on each concerned repo — confirm each PR URL before closing the task.
 2. **Contracts tag** published if applicable (prerelease version).
 3. **Merge instructions**: order when multiple PRs exist (contracts → backend/scraper → app).
 4. **After merge** (if requested): verify the EAS workflow via MCP and confirm OTA or TestFlight build.
@@ -245,38 +269,62 @@ At the end of a preview task:
    - Native: "Merge complete — new TestFlight build in ~20 min"
    - Backend: "Preview API redeployed on Railway"
 
+When the user also asked to **create a Linear task**, include the issue URL; follow `.cursor/rules/linear-task-creation.mdc` (French title + description).
+
 ## Prohibited actions
 
-| Action | Why |
-|--------|-----|
+| Action                                          | Why                                             |
+| ----------------------------------------------- | ----------------------------------------------- |
 | `EXPO_PUBLIC_BACKEND_URL` with ngrok in preview | Crash on startup (guard in `lib/api/client.ts`) |
-| Preview → `api.plassy.fr` | Risk to production data |
-| `eas build --profile production` for testing | Reserved for store releases |
-| `bun link` contracts in CI/EAS | Local dev only — use npm publish |
-| Bump `main` with a `-preview` version | Keeps production isolated from prereleases |
-| Merge without review unless explicitly asked | Human gate is intentional |
+| Preview → `api.plassy.fr`                       | Risk to production data                         |
+| `eas build --profile production` for testing    | Reserved for store releases                     |
+| `bun link` contracts in CI/EAS                  | Local dev only — use npm publish                |
+| Bump `main` with a `-preview` version           | Keeps production isolated from prereleases      |
+| Merge without review unless explicitly asked    | Human gate is intentional                       |
+
+## Git / PR troubleshooting
+
+| Error                                                                     | Likely cause                                              | Fix                                                                                                            |
+| ------------------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `Resource not accessible by integration` on `gh pr create` in a submodule | Cursor GitHub App not installed on that submodule repo    | Install the app on `Plassy-App/Plassy-App` (and other submodules), or open the PR manually via the compare URL |
+| PR tool targets umbrella repo only                                        | `ManagePullRequest` runs against `Plassy`, not submodules | Use `gh pr create` from inside the submodule (`cd plassy-app`)                                                 |
+
+Fallback compare URL (replace `<branch>`):
+
+`https://github.com/Plassy-App/Plassy-App/compare/preview...<branch>`
 
 ## EAS workflow troubleshooting
 
-| Error | Likely cause | Fix |
-|-------|--------------|-----|
-| `401` on `@plassy-app/api-contracts` | Invalid `NODE_AUTH_TOKEN` / `NPM_TOKEN` in EAS `preview` env | Recreate secrets on expo.dev |
-| Owner mismatch (`sweizeur` vs `plassy`) | `app.json` → `owner` not aligned with Expo org | `"owner": "plassy"` |
-| `No repository found for appId` | GitHub repo not connected to EAS | Connect `Plassy-App/Plassy-App` under org `@plassy` |
-| OTA does not apply | App installed from a `--local` build | Install the cloud preview build via TestFlight |
-| Workflow skips OTA, runs build | First cloud build or native change | Expected — wait for TestFlight |
+| Error                                   | Likely cause                                                 | Fix                                                 |
+| --------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------- |
+| `401` on `@plassy-app/api-contracts`    | Invalid `NODE_AUTH_TOKEN` / `NPM_TOKEN` in EAS `preview` env | Recreate secrets on expo.dev                        |
+| Owner mismatch (`sweizeur` vs `plassy`) | `app.json` → `owner` not aligned with Expo org               | `"owner": "plassy"`                                 |
+| `No repository found for appId`         | GitHub repo not connected to EAS                             | Connect `Plassy-App/Plassy-App` under org `@plassy` |
+| OTA does not apply                      | App installed from a `--local` build                         | Install the cloud preview build via TestFlight      |
+| Workflow skips OTA, runs build          | First cloud build or native change                           | Expected — wait for TestFlight                      |
+
+## Linear (issue tracking)
+
+When creating or updating a task, follow **`.cursor/rules/linear-task-creation.mdc`**:
+
+- **Titre et description en français**
+- Project `Version 1`, labels (`UX`, `Design`, `Backend`, … — pas `UI`), team Dev/Design
+- Linear MCP (`save_issue`, …)
+
+Project board: [Version 1](https://linear.app/plassy/project/version-1-ee36a8c46464)
 
 ## References
 
-| File | Role |
-|------|------|
-| `plassy-app/eas.json` | Preview build/submit profiles |
-| `plassy-app/.eas/workflows/preview-deploy.yml` | Auto preview CI/CD |
-| `plassy-app/app.json` | Expo owner, projectId, runtimeVersion |
-| `scripts/bump-contracts.sh` | Bump consumers after publish |
-| `plassy-contracts/MIGRATION.md` | Contracts release cycle |
-| `plassy-contracts/.github/workflows/publish.yml` | npm publish (stable + preview tags) |
-| `README.md` | Monorepo setup, root scripts |
+| File                                                                           | Role                                  |
+| ------------------------------------------------------------------------------ | ------------------------------------- |
+| `plassy-app/eas.json`                                                          | Preview build/submit profiles         |
+| `plassy-app/.eas/workflows/preview-deploy.yml`                                 | Auto preview CI/CD                    |
+| `plassy-app/app.json`                                                          | Expo owner, projectId, runtimeVersion |
+| `scripts/bump-contracts.sh`                                                    | Bump consumers after publish          |
+| `plassy-contracts/MIGRATION.md`                                                | Contracts release cycle               |
+| `plassy-contracts/.github/workflows/publish.yml`                               | npm publish (stable + preview tags)   |
+| `README.md`                                                                    | Monorepo setup, root scripts          |
+| [Linear — Version 1](https://linear.app/plassy/project/version-1-ee36a8c46464) | V1 backlog, Dev + Design issues       |
 
 ## Quick checklist by task type
 

@@ -1,0 +1,60 @@
+---
+description: Création et mise à jour de tâches Linear (Version 1, contenu en français)
+alwaysApply: true
+---
+
+# Tâches Linear — Plassy
+
+S'applique quand l'utilisateur demande de **créer**, **modifier** ou **trier** une tâche / issue / ticket. Utiliser le **Linear MCP** (`save_issue`, `list_issues`, `get_project`).
+
+## Langue
+
+- **Titre et description en français** (sections `## Problème`, `## Déjà en place`, etc.).
+- Chemins de fichiers et identifiants code restent en anglais (`plassy-app/features/...`).
+
+Exemple de titre : `Onboarding : clarifier la proposition de valeur`
+
+## Champs obligatoires (`save_issue`)
+
+| Champ | Règle |
+|-------|--------|
+| `project` | `Version 1` (sauf travail post-V1 explicite) |
+| `team` | Implémentation → `Plassy - Dev` · specs visuelles → `Plassy - Design` |
+| `labels` | **1–2** labels workspace (voir tableau) |
+| `assignee` | Dev → Anthony · Design → Raphael TCHIFTBACHIAN |
+
+**Pas de milestones** — petite équipe, le projet + labels suffisent. Ne pas en créer ni en assigner.
+
+### Labels
+
+| Combinaison | Usage |
+|-------------|--------|
+| `UX` + `Improvement` ou `Feature` | Messages métier, flows, onboarding |
+| `Design` + `Improvement` ou `Feature` | Visuel, composants, Figma, identité |
+| `Backend` + `Bug` ou `Improvement` | API, scraper, sécurité |
+| `Bug` (+ `Backend` si pertinent) | Défaut |
+
+## Template description
+
+```markdown
+## Problème
+(pourquoi c'est important)
+
+## Déjà en place (code)
+(fichiers / comportement — chercher dans le repo d'abord)
+
+## À faire
+- [ ] …
+
+## Fichiers clés
+- `path/to/file.ts`
+```
+
+## Après création
+
+- Retourner **URL Linear** + identifiant (`PLA1-XX` / `PLA2-XX`).
+- Lier une PR existante via `links` si disponible.
+
+## Interdit
+
+Issues V1 sans `Version 1` ou sans labels · specs design sur `Plassy - Dev` · label `UI` (utiliser `Design`) · nouveau projet fourre-tout · milestones.
