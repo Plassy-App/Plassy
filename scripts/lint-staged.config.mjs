@@ -9,7 +9,7 @@ function stripPrefix(files, prefix) {
 }
 
 function quote(files) {
-  return files.map((f) => `"${f.replace(/"/g, '\\"')}"`).join(" ");
+  return files.map((f) => `'${f.replace(/'/g, "'\\''")}'`).join(" ");
 }
 
 function typecheckCommand(packageDir, files) {
