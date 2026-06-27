@@ -20,6 +20,7 @@ jobs:
           fetch-depth: 0
           submodules: recursive
           token: ${{ secrets.SUBMODULES_PAT }}
+          persist-credentials: false
 
       - name: Install Gitleaks
         run: |
@@ -47,6 +48,7 @@ jobs:
           fetch-depth: 0
           submodules: recursive
           token: ${{ secrets.SUBMODULES_PAT }}
+          persist-credentials: false
 
       - name: Warn if consumers pin an older api-contracts version
         run: bash scripts/check-contracts-version.sh
@@ -74,6 +76,7 @@ jobs:
           submodules: recursive
           # Default GITHUB_TOKEN cannot clone other private repos (submodules).
           token: ${{ secrets.SUBMODULES_PAT }}
+          persist-credentials: false
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
