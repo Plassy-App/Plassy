@@ -18,12 +18,21 @@ if [[ ! -f .gitmodules ]]; then
 fi
 
 args=()
-while IFS= read -r line; do
-  key="${line%% *}"
-  ssh_url="${line#* }"
+while read -r key url; do
   name="${key#submodule.}"
   name="${name%.url}"
-  repo="${ssh_url#git@github.com:}"
+  case "$url" in
+    git@github.com:*)
+      repo="${url#git@github.com:}"
+      ;;
+    https://github.com/*)
+      repo="${url#https://github.com/}"
+      ;;
+    *)
+      echo "[submodules] Unsupported URL for ${name}: ${url}" >&2
+      exit 1
+      ;;
+  esac
   args+=(-c "submodule.${name}.url=https://x-access-token:${TOKEN}@github.com/${repo}")
 done < <(git config -f .gitmodules --get-regexp '^submodule\..*\.url')
 
