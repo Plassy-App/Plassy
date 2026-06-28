@@ -19,8 +19,9 @@ assets/
 node_modules/
 graphify-out/
 .scannerwork/
-# Cursor local state — keep rules versioned for the team
+# Cursor local state — keep rules and cloud env config versioned for the team
 .cursor/*
 !.cursor/rules/
 !.cursor/rules/**
+!.cursor/environment.json
 .DS_Store

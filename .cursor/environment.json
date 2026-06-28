@@ -1,0 +1,4 @@
+{
+  "name": "Plassy umbrella",
+  "install": "bash scripts/init-submodules.sh && bun install"
+}
