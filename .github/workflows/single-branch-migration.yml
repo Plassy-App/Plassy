@@ -11,11 +11,6 @@ on:
         description: Dry run (commit locally but do not push)
         type: boolean
         default: false
-  push:
-    branches: [main]
-    paths:
-      - "scripts/single-branch-migration/**"
-      - ".github/workflows/single-branch-migration.yml"
 
 concurrency:
   group: single-branch-migration
@@ -55,6 +50,9 @@ jobs:
             echo "### Single-branch migration"
             echo "- merge_preview: **${{ steps.flags.outputs.merge_preview }}**"
             echo "- dry_run: **${{ steps.flags.outputs.dry_run }}**"
+            echo ""
+            echo "#### Before running"
+            echo "Ensure \`SUBMODULES_PAT\` has **repo** + **workflow** scopes (required to push \`.github/workflows/*\`)."
             echo ""
             echo "#### Required secrets (per repo)"
             echo "| Repo | Secrets |"

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Apply single-branch (main-only) CI/CD to Plassy submodule repos.
 # Run locally with SUBMODULES_PAT set, or via .github/workflows/single-branch-migration.yml
+#
+# SUBMODULES_PAT must include scopes: repo, workflow (required to push .github/workflows/*)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -9,6 +11,7 @@ WORK_DIR="${WORK_DIR:-/tmp/plassy-single-branch-migration}"
 MERGE_PREVIEW="${MERGE_PREVIEW:-true}"
 DRY_RUN="${DRY_RUN:-false}"
 PAT="${SUBMODULES_PAT:?SUBMODULES_PAT is required}"
+FAILED=0
 
 mkdir -p "$WORK_DIR"
 
@@ -76,7 +79,10 @@ commit_and_push() {
     if [ "$DRY_RUN" = "true" ]; then
       echo "  dry run — skipping push"
     else
-      git push origin main
+      if ! git push origin main; then
+        echo "::error::Push failed for $(basename "$dir"). If workflows were added, ensure SUBMODULES_PAT has the workflow scope."
+        return 1
+      fi
     fi
   )
 }
@@ -89,11 +95,17 @@ migrate_repo() {
   echo ""
   echo "=== $gh_name ==="
   local dir
-  dir="$(clone_repo "$gh_name")"
-  merge_preview_into_main "$dir"
+  if ! dir="$(clone_repo "$gh_name")"; then
+    echo "::error::Failed to clone $gh_name"
+    FAILED=1
+    return 0
+  fi
+  merge_preview_into_main "$dir" || true
   copy_templates "$template_key" "$dir"
   patch_test_branches "$dir"
-  commit_and_push "$dir" "$commit_msg"
+  if ! commit_and_push "$dir" "$commit_msg"; then
+    FAILED=1
+  fi
 }
 
 echo "Single-branch migration (MERGE_PREVIEW=$MERGE_PREVIEW, DRY_RUN=$DRY_RUN)"
@@ -111,4 +123,8 @@ migrate_repo "Plassy-App" "plassy-app" \
   "ci: single-branch main — preview on push, production on release tag"
 
 echo ""
+if [ "$FAILED" -ne 0 ]; then
+  echo "::error::Migration incomplete. If push was rejected for workflow files, regenerate SUBMODULES_PAT with repo + workflow scopes."
+  exit 1
+fi
 echo "Migration complete."
