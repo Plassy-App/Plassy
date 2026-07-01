@@ -360,7 +360,7 @@ Durable, non-obvious notes for running this monorepo inside a Cursor Cloud Agent
 
 ### What runs on the cloud VM (and what does not)
 
-- **`plassy-app` is iOS/Android only and does NOT run on the web.** Do not attempt Expo web (`bun run web`) as a way to "run" the product — `react-native-web` is incompatible (e.g. `Appearance.setColorScheme` is missing) and `@rnmapbox/maps` needs a `mapbox-gl` web peer that is intentionally not a dependency. On the VM, validate the app only via `bun run --cwd plassy-app typecheck` / `test` / `lint` (and the Metro bundler can start). The real run target is a physical device via EAS/TestFlight — see the preview workflow above.
+- **plassy-app is iOS/Android only and does NOT run on the web.** Do not attempt Expo web ("bun run web") as a way to "run" the product — react-native-web is incompatible (e.g. "Appearance.setColorScheme" is missing) and "@rnmapbox/maps" needs a "mapbox-gl" web peer that is intentionally not a dependency. On the VM, validate the app only via individual commands: "bun run --cwd plassy-app typecheck", "bun run --cwd plassy-app test", or "bun run --cwd plassy-app lint" (and the Metro bundler can start). The real run target is a physical device via EAS/TestFlight — see the preview workflow above.
 - **Runnable services on the VM:** `plassy-backend` (`:3001`), `plassy-scraper` (`:3002`), `plassy-frontend` (`:3000`). These are what to exercise for end-to-end checks here.
 
 ### Private contracts package (`@plassy-app/api-contracts`)
