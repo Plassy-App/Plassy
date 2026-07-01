@@ -353,3 +353,31 @@ Project board: [Version 1](https://linear.app/plassy/project/version-1-ee36a8c46
 - [ ] PR → `preview`
 - [ ] Merge → build + TestFlight (not OTA alone)
 - [ ] Notify that a new TestFlight build must be installed
+
+## Cursor Cloud specific instructions
+
+Durable, non-obvious notes for running this monorepo inside a Cursor Cloud Agent VM (headless Linux). The startup update script already refreshes dependencies (submodule init, `bun install` per repo, contracts build+link, `npm install` for the frontend). Standard commands live in `README.md` and each `package.json`; only the gotchas are listed here.
+
+### What runs on the cloud VM (and what does not)
+
+- **plassy-app is iOS/Android only and does NOT run on the web.** Do not attempt Expo web ("bun run web") as a way to "run" the product — react-native-web is incompatible (e.g. "Appearance.setColorScheme" is missing) and "@rnmapbox/maps" needs a "mapbox-gl" web peer that is intentionally not a dependency. On the VM, validate the app only via individual commands: "bun run --cwd plassy-app typecheck", "bun run --cwd plassy-app test", or "bun run --cwd plassy-app lint" (and the Metro bundler can start). The real run target is a physical device via EAS/TestFlight — see the preview workflow above.
+- **Runnable services on the VM:** `plassy-backend` (`:3001`), `plassy-scraper` (`:3002`), `plassy-frontend` (`:3000`). These are what to exercise for end-to-end checks here.
+
+### Private contracts package (`@plassy-app/api-contracts`)
+
+- Consumers (`plassy-backend`, `plassy-scraper`, `plassy-app`) depend on this private GitHub Packages package. The cloud `GH_TOKEN` does **not** have `read:packages`, so registry installs return `401`.
+- Local-dev workaround (handled by the update script): build `plassy-contracts` then `bun link` it, and `bun link @plassy-app/api-contracts` inside each consumer before `bun install`. Once linked, `bun install` no longer hits the registry. If a consumer suddenly fails to resolve the package, re-run `bun link @plassy-app/api-contracts` in that folder.
+
+### Backend (`plassy-backend`)
+
+- Local **PostgreSQL 16** and **Redis** are installed in the VM and started with "sudo service postgresql start" and "sudo service redis-server start" (no systemd in the VM, but sysvinit service wrappers are available). DB/user: "plassy" / "plassy", database "plassy".
+- The Prisma schema relies on the **`pg_uuidv7`** extension (`uuid_generate_v7()`), which is **not** in stock Postgres — it is installed into the cluster from `fboulnois/pg_uuidv7`. Apply schema with `bunx prisma migrate deploy` (the `init` migration runs `CREATE EXTENSION pg_uuidv7`). Do **not** use `prisma db push` for a fresh DB: it tries to create tables before the extension exists and fails with `function uuid_generate_v7() does not exist`.
+- **Boot gotcha:** `src/services/places/enrichment/llm-extractor.ts` constructs the OpenAI client at import time, so the backend **refuses to start without a non-empty `OPENAI_API_KEY`**, even though env validation marks it optional. A placeholder value (e.g. `sk-placeholder-...`) lets it boot; real AI features need a real key.
+- `/health` reports `"degraded"` with `redis:"disconnected"` in dev — this is expected (ioredis lazy-connects; Redis is optional in dev). `database:"connected"` is the signal the DB is wired correctly. `GET /api/hello` → `{"ok":true}` is a quick liveness check.
+- `.env` files are gitignored and created during setup ("cp .env.example .env"). Minimum to boot: "DATABASE_URL", "NODE_ENV=development", "OPENAI_API_KEY" (placeholder ok), and "SCRAPER_INTERNAL_TOKEN" (to match the scraper).
+
+### Scraper (`plassy-scraper`)
+
+- Boots without browsers, but **actual scraping needs Playwright Chromium**: `cd plassy-scraper && bunx playwright install --with-deps chromium` (installed once in the VM snapshot, not in the update script).
+- `/scrape/*` is protected by the `x-scraper-token` header which must equal `SCRAPER_INTERNAL_TOKEN`; the same value must be set in the backend `.env`. Generate with `openssl rand -hex 32`.
+- From a datacenter IP, Instagram/TikTok often return bot-wall pages, so OG titles may be generic (e.g. `"TikTok - Make Your Day"`). The pipeline still runs end-to-end; this is a network/IP limitation, not a code error.
