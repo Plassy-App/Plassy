@@ -68,6 +68,8 @@ commit_and_push() {
       echo "  no changes to commit"
       return 0
     fi
+    git config user.name "github-actions[bot]"
+    git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
     git add -A
     git status --short
     git commit -m "$message"
