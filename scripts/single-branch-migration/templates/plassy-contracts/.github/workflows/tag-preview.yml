@@ -1,0 +1,57 @@
+name: Tag preview package
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "package.json"
+      - "src/**"
+      - "openapi/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tag-preview-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: Create preview git tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Create preview tag when package version is a prerelease
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [[ ! "$VERSION" =~ -preview\. ]]; then
+            echo "Version ${VERSION} is not a preview prerelease — skipping auto-tag."
+            exit 0
+          fi
+
+          TAG="v${VERSION}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists — skipping."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Preview release ${VERSION}"
+          git push origin "$TAG"
+          echo "Created and pushed ${TAG}"
+
+      - name: Summary
+        if: always()
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          {
+            echo "### Contracts preview tag"
+            echo "- package.json version: \`${VERSION}\`"
+            echo "- Expected tag: \`v${VERSION}\` (if prerelease)"
+            echo "- publish.yml runs on tag push → GitHub Packages"
+          } >> "$GITHUB_STEP_SUMMARY"

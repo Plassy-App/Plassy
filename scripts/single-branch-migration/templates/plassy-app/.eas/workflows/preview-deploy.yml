@@ -1,0 +1,49 @@
+# Preview deploy manual fallback on expo.dev (auto deploy runs via GitHub Actions).
+name: Deploy to preview (manual)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  fingerprint:
+    name: Fingerprint
+    type: fingerprint
+    environment: preview
+
+  get_ios_build:
+    name: Check for existing iOS build
+    needs: [fingerprint]
+    type: get-build
+    params:
+      fingerprint_hash: ${{ needs.fingerprint.outputs.ios_fingerprint_hash }}
+      profile: preview
+      platform: ios
+
+  build_ios:
+    name: Build iOS preview
+    needs: [get_ios_build]
+    if: ${{ !needs.get_ios_build.outputs.build_id }}
+    type: build
+    params:
+      platform: ios
+      profile: preview
+
+  submit_ios_build:
+    name: Submit iOS to TestFlight
+    needs: [build_ios]
+    if: ${{ needs.build_ios.outputs.build_id }}
+    type: submit
+    params:
+      build_id: ${{ needs.build_ios.outputs.build_id }}
+      profile: preview
+
+  publish_ios_update:
+    name: Publish iOS OTA update
+    needs: [get_ios_build]
+    if: ${{ needs.get_ios_build.outputs.build_id }}
+    type: update
+    environment: preview
+    params:
+      channel: preview
+      platform: ios
+      message: Manual preview deploy

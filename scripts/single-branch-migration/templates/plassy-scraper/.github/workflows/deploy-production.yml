@@ -1,0 +1,42 @@
+name: Deploy to production
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "!v*-preview.*"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production-${{ github.workflow }}-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Railway production
+    runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PRODUCTION }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Verify Railway token
+        run: |
+          if [ -z "${RAILWAY_TOKEN:-}" ]; then
+            echo "::error::RAILWAY_TOKEN_PRODUCTION repository secret is missing."
+            exit 1
+          fi
+
+      - name: Deploy to Railway production
+        run: railway up --service=fe11f8d3-6c0a-4ce5-b5ff-1dc3e9d7674b --environment=production --detach
+
+      - name: Deployment summary
+        if: always()
+        run: |
+          {
+            echo "### Production deploy"
+            echo "- Environment: **production**"
+            echo "- Tag: \`${{ github.ref_name }}\`"
+            echo "- Commit: \`${{ github.sha }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
