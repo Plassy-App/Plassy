@@ -1,0 +1,135 @@
+name: Deploy to preview
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: preview-deploy-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Preview deploy (OTA or build)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.3.13
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "20"
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@plassy-app"
+
+      - uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e # v8
+        with:
+          eas-version: latest
+          packager: bun
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Verify Expo authentication
+        run: |
+          if [ -z "${EXPO_TOKEN:-}" ]; then
+            echo "::error::EXPO_TOKEN repository secret is missing."
+            exit 1
+          fi
+          eas whoami
+
+      - name: Install dependencies
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bun install --frozen-lockfile
+
+      - name: Decide OTA vs build
+        id: deploy
+        run: |
+          set +e
+          eas env:exec preview --non-interactive -- bash scripts/preview-deploy-check.sh --json > deploy-check.json
+          CHECK_EXIT=$?
+          set -e
+
+          if [ "$CHECK_EXIT" -ne 0 ] || [ ! -s deploy-check.json ]; then
+            echo "::warning::eas env:exec preview failed (exit ${CHECK_EXIT}); retrying without remote env injection"
+            bash scripts/preview-deploy-check.sh --json > deploy-check.json
+          fi
+
+          if [ ! -s deploy-check.json ]; then
+            echo "::error::preview deploy check produced no output"
+            exit 1
+          fi
+
+          cat deploy-check.json
+          node <<'NODE' >> "$GITHUB_OUTPUT"
+          const fs = require('fs');
+          const result = JSON.parse(fs.readFileSync('deploy-check.json', 'utf8'));
+          const output = [
+            `action=${result.action}`,
+            `fingerprint_hash=${result.fingerprintHash}`,
+            `compatible_build_id=${result.compatibleBuildId ?? ''}`,
+          ];
+          process.stdout.write(output.join('\n'));
+          NODE
+
+      - name: Publish iOS OTA update
+        if: steps.deploy.outputs.action == 'ota'
+        env:
+          UPDATE_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          eas update \
+            --channel preview \
+            --platform ios \
+            --environment preview \
+            --message "${UPDATE_MESSAGE:-Preview update}" \
+            --non-interactive
+
+      - name: Build iOS preview
+        id: build
+        if: steps.deploy.outputs.action == 'build'
+        run: bash scripts/eas-build-preview-ios.sh
+
+      - name: Submit iOS build to TestFlight
+        if: steps.deploy.outputs.action == 'build' && steps.build.outcome == 'success'
+        run: bash scripts/eas-submit-preview-ios.sh "${{ steps.build.outputs.id }}"
+
+      - name: Apple Developer account blocker summary
+        if: failure() && steps.deploy.outputs.action == 'build'
+        run: |
+          for log in eas-build-preview.log eas-submit-preview.log; do
+            if [ -f "$log" ] && bash scripts/eas-apple-blocker-hint.sh "$log" >/dev/null 2>&1; then
+              {
+                echo "### Action requise — Apple Developer"
+                echo ""
+                echo "Le déploiement preview est **bloqué par un contrat Apple**, pas par un bug app."
+                echo ""
+                echo "1. [developer.apple.com/account](https://developer.apple.com/account) → accepter le **Program License Agreement**"
+                echo "2. Relancer le workflow **Deploy to preview**"
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+          done
+
+      - name: Deployment summary
+        if: always()
+        run: |
+          {
+            echo "### Preview deploy"
+            echo "- Action: **${{ steps.deploy.outputs.action }}**"
+            echo "- Fingerprint: \`${{ steps.deploy.outputs.fingerprint_hash }}\`"
+            if [ "${{ steps.deploy.outputs.action }}" = "ota" ]; then
+              echo "- Compatible build: \`${{ steps.deploy.outputs.compatible_build_id }}\`"
+              echo "- Tester: reopen the preview app to fetch the OTA"
+            else
+              echo "- New build: \`${{ steps.build.outputs.id }}\`"
+              echo "- Tester: install the new TestFlight build when available"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

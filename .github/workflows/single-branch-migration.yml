@@ -1,0 +1,53 @@
+name: Single-branch migration
+
+on:
+  workflow_dispatch:
+    inputs:
+      merge_preview:
+        description: Merge preview branch into main before applying workflow changes
+        type: boolean
+        default: true
+      dry_run:
+        description: Dry run (commit locally but do not push)
+        type: boolean
+        default: false
+
+concurrency:
+  group: single-branch-migration
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Apply single-branch CI/CD to submodules
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Apply migration to submodule repos
+        env:
+          SUBMODULES_PAT: ${{ secrets.SUBMODULES_PAT }}
+          MERGE_PREVIEW: ${{ inputs.merge_preview }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: bash scripts/single-branch-migration/apply-migration.sh
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Single-branch migration"
+            echo "- merge_preview: **${{ inputs.merge_preview }}**"
+            echo "- dry_run: **${{ inputs.dry_run }}**"
+            echo ""
+            echo "#### Required secrets (per repo)"
+            echo "| Repo | Secrets |"
+            echo "|------|---------|"
+            echo "| plassy-backend, plassy-scraper | \`RAILWAY_TOKEN_PREVIEW\`, \`RAILWAY_TOKEN_PRODUCTION\` |"
+            echo "| plassy-app | \`EXPO_TOKEN\` (already configured) |"
+            echo ""
+            echo "#### After migration"
+            echo "1. Add Railway project tokens to backend + scraper repos"
+            echo "2. Push to \`main\` on any repo → preview deploy"
+            echo "3. Create GitHub Release / tag \`vX.Y.Z\` → production deploy"
+          } >> "$GITHUB_STEP_SUMMARY"
