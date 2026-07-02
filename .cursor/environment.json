@@ -1,5 +1,5 @@
 {
   "name": "Plassy umbrella",
-  "install": "bash scripts/init-submodules.sh && bun install",
+  "install": "(command -v bun >/dev/null 2>&1 || curl -fsSL https://bun.sh/install | bash -s -- bun-v1.3.13) && export BUN_INSTALL=\"$HOME/.bun\" && export PATH=\"$BUN_INSTALL/bin:$PATH\" && bash scripts/init-submodules.sh && bun install",
   "start": "sudo service postgresql start && sudo service redis-server start"
 }
