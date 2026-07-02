@@ -11,6 +11,9 @@ concurrency:
   group: deploy-production-${{ github.workflow }}-${{ github.repository }}
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     name: Railway production
@@ -27,6 +30,24 @@ jobs:
             echo "::error::RAILWAY_TOKEN_PRODUCTION repository secret is missing."
             exit 1
           fi
+
+      - name: Verify NODE_AUTH_TOKEN secret
+        run: |
+          if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
+            echo "::error::NODE_AUTH_TOKEN repository secret is missing."
+            exit 1
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+
+      - name: Sync NODE_AUTH_TOKEN for GitHub Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+        run: |
+          printf '%s' "$NODE_AUTH_TOKEN" | railway variable set NODE_AUTH_TOKEN \
+            --stdin \
+            --service=fe11f8d3-6c0a-4ce5-b5ff-1dc3e9d7674b \
+            --environment=production
 
       - name: Deploy to Railway production
         run: railway up --service=fe11f8d3-6c0a-4ce5-b5ff-1dc3e9d7674b --environment=production --detach
