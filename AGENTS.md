@@ -12,6 +12,20 @@ When a preview task is requested:
 4. The tester validates on a physical device (TestFlight or OTA).
 5. When ready for production → create a **GitHub Release** / tag `vX.Y.Z` → production deploy.
 
+### Keep in mind (operational defaults)
+
+| Topic | Rule |
+| ----- | ---- |
+| **Integration branch** | One long-lived branch: `main`. Preview and prod are **environments**, not branches. Legacy `preview` branches are obsolete — safe to delete once validated. |
+| **Preview trigger** | Merge PR → `main` → GitHub Actions deploy preview (Railway backend/scraper + EAS app). |
+| **Production trigger** | `gh release create vX.Y.Z` → GitHub Actions deploy production. |
+| **Contracts version** | Whatever is **pinned in each consumer's `package.json`** at build time — not a separate preview branch. When no contracts PR is in flight, preview and prod use the **same** version (currently `3.4.0`). |
+| **Contracts preview bump** | Prerelease on `main` (`X.Y.Z-preview.N`) → auto-tag → npm publish → `./scripts/bump-contracts.sh` → consumer PRs → merge → deploy. |
+| **Railway auto-deploy** | **Disabled** on both envs. Deploys are CI-only via `railway up` + `RAILWAY_TOKEN_*`. |
+| **`NODE_AUTH_TOKEN` (Railway)** | Managed **manually in Railway** (preview **and** production env vars). **Do not** sync from GitHub Actions — the GH token is Actions-scoped and useless on Railway. |
+| **Railway deploy success** | `railway up --detach` only confirms the deploy **started**. Always verify build **SUCCESS** on the Railway dashboard or hit the health URL. |
+| **Submodule PRs** | Code changes and PRs live **inside each submodule repo**, not the umbrella `Plassy` repo. |
+
 ## Single-branch architecture
 
 One long-lived integration branch: **`main`**. Preview and production are **environments**, not branches.
@@ -138,6 +152,18 @@ The `publish.yml` workflow publishes on:
 
 Always pin the exact version: `"@plassy-app/api-contracts": "3.5.0-preview.1"` (not `^`).
 
+### Which version does preview use?
+
+Contracts are **npm packages on GitHub Packages**, not Railway services. Each environment uses the version **pinned in `package.json` + lockfile** when that service is built:
+
+| Situation | Preview version | Production version |
+| --------- | --------------- | ------------------ |
+| No contracts change in flight | Same stable pin (e.g. `3.4.0`) | Same |
+| After preview contracts PR merged + consumers bumped | `X.Y.Z-preview.N` | Still old stable until prod release |
+| After prod contracts release + consumers bumped | Same stable `X.Y.Z` | Same stable `X.Y.Z` |
+
+The version number (`-preview.N` vs stable) distinguishes preview from prod — **not** a git branch. Consumer bumps are **manual** (`./scripts/bump-contracts.sh`) so you control timing after npm publish (~2–3 min).
+
 ## Backend and scraper
 
 - Integration branch: `main`.
@@ -153,7 +179,21 @@ Always pin the exact version: `"@plassy-app/api-contracts": "3.5.0-preview.1"` (
 | `RAILWAY_TOKEN_PREVIEW`      | Railway project token scoped to **preview** environment             |
 | `RAILWAY_TOKEN_PRODUCTION`   | Railway project token scoped to **production** environment          |
 
-Create tokens: Railway dashboard → Project → Settings → Tokens.
+Create tokens: Railway dashboard → Project → Settings → [Tokens](https://railway.com/project/11876ed8-5fba-4d54-9f18-cfc667c24554/settings/tokens) (Project Tokens, **not** Account → Tokens).
+
+**`NODE_AUTH_TOKEN` on Railway (preview + production):** GitHub PAT with `read:packages`, set as a Railway **environment variable** on both Plassy-Backend and Plassy-Scraper services. Required for Docker build `bun install` of `@plassy-app/api-contracts`. Update it in Railway when the PAT rotates — do not add it to GitHub Actions secrets for deploy workflows.
+
+### Manual preview deploy (per repo)
+
+Test the auto-deploy pipeline from each repo's Actions tab (not the umbrella `Plassy` repo):
+
+| Repo | Workflow | Link |
+| ---- | -------- | ---- |
+| `plassy-backend` | Deploy to preview | [deploy-preview.yml](https://github.com/Plassy-App/Plassy-Backend/actions/workflows/deploy-preview.yml) |
+| `plassy-scraper` | Deploy to preview | [deploy-preview.yml](https://github.com/Plassy-App/Plassy-Scraper/actions/workflows/deploy-preview.yml) |
+| `plassy-app` | Deploy to preview | [preview-deploy.yml](https://github.com/Plassy-App/Plassy-App/actions/workflows/preview-deploy.yml) |
+
+Run workflow → branch `main` → verify GH job green **and** Railway build SUCCESS.
 
 ### API coordination
 
@@ -303,6 +343,23 @@ At the end of a preview task:
 
 When the user also asked to **create a Linear task**, include the issue URL; follow `.cursor/rules/linear-task-creation.mdc` (French title + description).
 
+## Secrets & credentials (where each value lives)
+
+Do not duplicate secrets across platforms unless documented here. Wrong placement is the most common deploy failure.
+
+| Secret / variable | Cursor Cloud VM | GitHub Actions (umbrella) | GitHub Actions (backend/scraper) | GitHub Actions (app) | Railway (preview + prod) | EAS (`preview` env) |
+| ----------------- | --------------- | ------------------------- | -------------------------------- | -------------------- | ------------------------ | ------------------- |
+| `GH_TOKEN` / `SUBMODULES_PAT` | ✅ submodule clone | ✅ migration scripts (`repo` + `workflow`) | — | — | — | — |
+| `RAILWAY_TOKEN_PREVIEW` | — | — | ✅ deploy preview | — | — | — |
+| `RAILWAY_TOKEN_PRODUCTION` | — | — | ✅ deploy production | — | — | — |
+| `NODE_AUTH_TOKEN` | optional (local bun link workaround) | — | ❌ **not used** (do not sync to Railway) | — | ✅ Docker build `bun install` | ✅ + `NPM_TOKEN` for builds |
+| `EXPO_TOKEN` | — | — | — | ✅ EAS workflows | — | — |
+| `EXPO_PUBLIC_*`, Mapbox, IAP, Sentry | — | — | — | — | — | ✅ expo.dev env vars |
+
+**Railway Project Tokens:** create at Project → Settings → Tokens, one per environment (preview / production). Paste the **full** token once at creation — the masked `****-b423` suffix is not the secret value.
+
+**Before first production release:** confirm `NODE_AUTH_TOKEN` exists on Railway **production** env (backend + scraper), not just preview.
+
 ## Prohibited actions
 
 | Action                                          | Why                                             |
@@ -312,6 +369,8 @@ When the user also asked to **create a Linear task**, include the issue URL; fol
 | `eas build --profile production` for testing    | Reserved for store releases                     |
 | `bun link` contracts in CI/EAS                  | Local dev only — use npm publish                |
 | Merge without review unless explicitly asked    | Human gate is intentional                       |
+| Sync `NODE_AUTH_TOKEN` from GitHub Actions to Railway | GH token is Actions-scoped; Railway build needs a PAT in Railway env vars |
+| Trust GH Action green alone for Railway deploy    | `railway up --detach` does not wait for build completion |
 
 ## Git / PR troubleshooting
 
@@ -319,7 +378,9 @@ When the user also asked to **create a Linear task**, include the issue URL; fol
 | ------------------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `Resource not accessible by integration` on `gh pr create` in a submodule | Cursor GitHub App not installed on that submodule repo    | Install the app on `Plassy-App/Plassy-App` (and other submodules), or open the PR manually via the compare URL |
 | PR tool targets umbrella repo only                                        | `ManagePullRequest` runs against `Plassy`, not submodules | Use `gh pr create` from inside the submodule (`cd plassy-app`)                                                 |
-| Railway deploy fails with 401                                             | Missing or wrong `RAILWAY_TOKEN_*` secret                   | Create environment-scoped project token in Railway dashboard                                                   |
+| Railway deploy fails with `Invalid RAILWAY_TOKEN`                         | Account token or masked suffix pasted instead of full Project Token | Regenerate at Railway Project → Settings → Tokens; paste the **full** UUID shown once at creation |
+| Railway GH Action green but Railway build FAILED                          | `railway up --detach` does not wait for build               | Check Railway dashboard build logs; common cause: expired `NODE_AUTH_TOKEN` on Railway (401 on GitHub Packages) |
+| Railway deploy fails with 401 on GitHub Packages during Docker build      | Missing or expired `NODE_AUTH_TOKEN` **on Railway**         | Update PAT (`read:packages`) in Railway env vars for preview **and** production — not in GH Actions secrets      |
 
 Fallback compare URL (replace `<branch>`):
 
@@ -356,6 +417,9 @@ Project board: [Version 1](https://linear.app/plassy/project/version-1-ee36a8c46
 | `plassy-backend/.github/workflows/deploy-production.yml`                       | Railway production deploy             |
 | `scripts/single-branch-migration/apply-migration.sh`                           | One-shot migration script             |
 | `scripts/bump-contracts.sh`                                                    | Bump consumers after publish          |
+| `scripts/init-submodules.sh`                                                   | Cloud Agent submodule init (HTTPS + token) |
+| `.cursor/environment.json`                                                       | Cloud Agent VM install recipe         |
+| `.cursor/rules/*.mdc`                                                            | Scoped agent rules (Linear, contracts) |
 | `plassy-contracts/.github/workflows/tag-preview.yml`                           | Auto-tag preview versions on main     |
 | `plassy-contracts/.github/workflows/publish.yml`                               | npm publish (stable + preview tags)   |
 | `README.md`                                                                    | Monorepo setup, root scripts          |
@@ -395,9 +459,82 @@ Project board: [Version 1](https://linear.app/plassy/project/version-1-ee36a8c46
 - [ ] `gh release create vX.Y.Z` on each touched repo (or monorepo tag)
 - [ ] Verify Railway production + EAS production workflows
 
+## Cursor Cloud Agent — configuration map
+
+Cloud Agents run in isolated Ubuntu VMs. Configuration is **layered** — not limited to `.cursor/environment.json` and `AGENTS.md` alone.
+
+Docs: [Cloud Agents](https://cursor.com/docs/cloud-agent) · [Environment setup](https://cursor.com/docs/cloud-agent/setup) · [Capabilities](https://cursor.com/docs/cloud-agent/capabilities) · [Settings](https://cursor.com/docs/cloud-agent/settings) · [Hooks](https://cursor.com/docs/hooks)
+
+### What Plassy uses today
+
+| Mechanism | Path / location | Role in Plassy |
+| --------- | --------------- | -------------- |
+| **Environment recipe** | `.cursor/environment.json` | `install`: submodule init + `bun install` |
+| **Agent instructions** | `AGENTS.md` (this file) | Preview workflow, contracts order, git/PR rules, VM gotchas |
+| **Scoped rules** | `.cursor/rules/*.mdc` | Linear task creation, contracts bump/link conventions |
+| **MCP servers** | Cursor dashboard (team) | Linear, Expo, Neon, Railway — configured in [Cloud Agents → MCP](https://cursor.com/agents) |
+| **Runtime secrets** | Cursor dashboard → Secrets | `GH_TOKEN` or `SUBMODULES_PAT` for private submodule clone (see `scripts/init-submodules.sh`) |
+
+### Full configuration surface (reference)
+
+Use this when extending the Cloud Agent setup beyond the current minimum.
+
+| Mechanism | Where | What it controls | Cloud Agent support |
+| --------- | ----- | ---------------- | ------------------- |
+| **`environment.json`** | `.cursor/environment.json` | VM recipe: `install` (idempotent update), optional `start`, `terminals`, `env`, `snapshot`, or `build.dockerfile` | ✅ Primary repo-level config; takes precedence over dashboard saved envs |
+| **`AGENTS.md`** | Repo root (nested in subdirs for subprojects) | Persistent instructions — read by **local Agent and Cloud Agents** | ✅ Recommended; use a `Cursor Cloud specific instructions` section for VM-only notes |
+| **`CLOUD.md`** | `.cursor/CLOUD.md` | Cloud-only instructions (local IDE ignores this file) | ✅ Optional split if cloud-only content grows large |
+| **Project rules** | `.cursor/rules/*.mdc` | Scoped rules with `globs`, `alwaysApply`, or `metadata.environments: cloud` for cloud-only rules | ✅ `linear-task-creation.mdc`, `api-contracts-bun-link.mdc` |
+| **Hooks** | `.cursor/hooks.json` | Command hooks: `beforeShellExecution`, `afterFileEdit`, `preToolUse`, `subagentStart`, etc. | ✅ Project hooks run in cloud; user-level `~/.cursor/hooks.json` does **not** |
+| **MCP servers** | Dashboard and/or `.cursor/mcp.json` | External tools (DB, APIs, Expo builds, Linear issues) | ✅ HTTP (recommended) or stdio; team MCP via dashboard → Integrations |
+| **Cursor Secrets** | [cursor.com/dashboard/cloud-agents](https://cursor.com/dashboard/cloud-agents) | Env vars injected into the VM (`GH_TOKEN`, API keys, TOTP secrets) | ✅ Preferred over committing `.env` files |
+| **Environment-scoped secrets** | Cloud Agents dashboard → per-environment | Secrets limited to one saved environment / repo group | Optional — useful for staging vs prod credentials |
+| **Multi-repo environment** | Dashboard → Environments | Clone multiple repos into one VM (alternative to git submodules) | Plassy uses **submodules** in one umbrella repo instead |
+| **Snapshot vs Dockerfile** | `environment.json` → `snapshot` or `build.dockerfile` | Snapshot = fast boot from cached VM; Dockerfile = reproducible system deps (Postgres, Playwright, Docker-in-Docker) | Snapshot optional after guided setup; Dockerfile for advanced deps |
+| **`start` + `terminals`** | `environment.json` | Long-running processes in tmux (dev servers, `docker start`, `convex dev`) | Not configured yet — agent starts services on demand per AGENTS.md |
+| **Network allowlist** | Dashboard → Environment → Network | Restrict outbound domains per environment | Default + allowlist or allowlist-only |
+| **Private network** | Dockerfile / setup | Tailscale (userspace mode) or Cloudflare Tunnel for VPC/intranet | Not configured — preview APIs are public Railway URLs |
+| **AWS IAM role** | Secret `CURSOR_AWS_ASSUME_IAM_ROLE_ARN` | STS-assumed AWS access without long-lived keys | Not used |
+| **Artifacts & desktop** | Built-in | Screenshots, videos, logs on PRs; remote desktop control | Available — useful for UI verification |
+| **CI autofix** | Dashboard → My Settings | Cloud Agent auto-fixes CI on its own PRs (GitHub Actions) | Teams feature; comment `@cursor autofix off` on a PR to disable |
+| **Triggers** | Slack `@cursor`, Linear `@cursor`, GitHub PR comments, API, iOS app | Start agents from outside the IDE | Available |
+
+### Environment resolution order
+
+When a Cloud Agent starts, Cursor picks the environment config in this order:
+
+1. `.cursor/environment.json` in the repo (Plassy uses this)
+2. Personal saved environment (dashboard)
+3. Team saved environment (dashboard)
+
+Commit `environment.json` so the team shares the same VM recipe. Test config changes by pushing to a branch and starting an agent from that branch.
+
+### Plassy `environment.json` today
+
+```json
+{
+  "name": "Plassy umbrella",
+  "install": "bash scripts/init-submodules.sh && bun install"
+}
+```
+
+The `install` script must stay **idempotent** — it may run on partially cached state. Keep heavy one-off setup (Playwright browsers, Postgres extension, contracts `bun link`) in AGENTS.md instructions or extend `install` / a Dockerfile when needed.
+
+**Required Cursor Secret:** `GH_TOKEN` or `SUBMODULES_PAT` with `repo` scope (and `read:packages` if the token is reused elsewhere). Without it, `scripts/init-submodules.sh` fails on private submodule clone.
+
+### Optional improvements (not yet configured)
+
+| Need | Add |
+| ---- | --- |
+| Cloud-only rules without polluting local IDE | `.cursor/CLOUD.md` or `metadata.environments: cloud` in `.mdc` rules |
+| Auto-format / policy checks in cloud | `.cursor/hooks.json` with `afterFileEdit` |
+| Postgres + Redis always running | `start` or `terminals` in `environment.json`, or Postgres in Dockerfile |
+| Faster repeat boots | Save a dashboard snapshot after guided setup; reference `"snapshot": "..."` in `environment.json` |
+| Submodule repo-specific agent docs | Nested `AGENTS.md` inside `plassy-app/`, `plassy-backend/`, etc. (nearest file wins) |
+
 ## Cursor Cloud specific instructions
 
-Durable, non-obvious notes for running this monorepo inside a Cursor Cloud Agent VM (headless Linux). The startup update script already refreshes dependencies (submodule init, `bun install` per repo, contracts build+link, `npm install` for the frontend). Standard commands live in `README.md` and each `package.json`; only the gotchas are listed here.
+Durable, non-obvious notes for running this monorepo inside a Cursor Cloud Agent VM (headless Linux). The startup `install` script runs submodule init + root `bun install`. Standard commands live in `README.md` and each `package.json`; only the gotchas are listed here.
 
 ### What runs on the cloud VM (and what does not)
 
