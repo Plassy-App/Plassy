@@ -1,4 +1,5 @@
 {
   "name": "Plassy umbrella",
-  "install": "bash scripts/init-submodules.sh && bun install"
+  "install": "bash scripts/init-submodules.sh && bun install",
+  "start": "sudo service postgresql start && sudo service redis-server start"
 }

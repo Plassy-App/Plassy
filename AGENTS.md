@@ -37,7 +37,7 @@ One long-lived integration branch: **`main`**. Preview and production are **envi
 | **Scraper**      | `plassy-scraper`   | `main`    | push to `main`      | tag `vX.Y.Z`              |
 | **Contracts**    | `plassy-contracts` | `main`    | push to `main`      | tag `vX.Y.Z` (stable)     |
 | **Web frontend** | `plassy-frontend`  | `main`    | —                   | —                         |
-| **Umbrella**     | `Plassy` (root)    | `dev`     | CI only             | —                         |
+| **Umbrella**     | `Plassy` (root)    | `main`    | CI only             | —                         |
 
 ### Environments
 
@@ -110,14 +110,78 @@ After merge to `main` (app):
 
 ## Contracts (`plassy-contracts`)
 
-The `@plassy-app/api-contracts` package is published to **GitHub Packages**, not deployed on Railway.
+The `@plassy-app/api-contracts` package is published to **GitHub Packages**, not deployed on Railway. Package scope is **`@plassy-app`** (org Plassy-App).
 
-### When contracts change
+### When to touch the version
+
+**Do not bump** `plassy-contracts/package.json` unless you change `src/` or `__tests__/`. App, backend, or scraper work alone does not require a contracts version change.
+
+| Context | Version format | Example |
+| ------- | -------------- | ------- |
+| No contract change | Leave as-is | `3.4.0` |
+| Ship to preview | Prerelease on `main` | `3.5.0-preview.1` |
+| Ship to production | Stable | `3.5.0` |
+
+### Two consumption workflows — do not mix them
+
+| Context | Mechanism | Why |
+| ------- | --------- | --- |
+| **Local dev** | `bun link` | Symlink to local `plassy-contracts` without publishing |
+| **Preview / prod / CI** | Exact pin in `package.json` + lockfile | Deploy resolves from GitHub Packages — `bun link` is invisible there |
+
+**Consumers** (`plassy-app`, `plassy-backend`, `plassy-scraper`):
+
+- Pin the exact version: `"@plassy-app/api-contracts": "3.5.0-preview.1"` (not `^`, not `latest`).
+- **Never** use `file:../plassy-contracts` or any `file:` path.
+
+```json
+// ❌ BAD
+"@plassy-app/api-contracts": "file:../plassy-contracts"
+
+// ✅ GOOD
+"@plassy-app/api-contracts": "3.5.0-preview.1"
+```
+
+**Local dev** (after clone or when contracts change, before publish):
+
+```bash
+cd plassy-contracts && bun install && bun run build && bun link
+cd ../plassy-backend && bun link @plassy-app/api-contracts
+cd ../plassy-scraper && bun link @plassy-app/api-contracts
+cd ../plassy-app && bun link @plassy-app/api-contracts
+```
+
+If `bun install` in a consumer fails with 404/401 on GitHub Packages, re-run `bun link @plassy-app/api-contracts` in that package (do not switch to `file:`). Restart Metro after linking in `plassy-app`. Cloud VM details: `.cursor/CLOUD.md`.
+
+### Semantic versioning
+
+| Bump | When |
+| ---- | ---- |
+| **Major** (`3.0.0`) | Breaking change — remove endpoint/field, rename route, change response shape |
+| **Minor** (`2.1.0`) | Backward-compatible addition — new optional field, new endpoint |
+| **Patch** (`2.0.2`) | Fix with no API impact — typo in schema description, internal refactor |
+
+**Agent rule:** whenever you change `plassy-contracts/src/` or `__tests__/` in the same task or PR:
+
+1. **Bump** `version` in `plassy-contracts/package.json` (correct semver row above).
+2. **Add** an entry under `## [X.Y.Z] - YYYY-MM-DD` in `CHANGELOG.md` (`Added` / `Changed` / `Removed`).
+3. Same commit as the contract change. CI **fails** if `src/` changes without a version bump.
+
+| You changed… | Bump |
+| ------------ | ---- |
+| Removed endpoint, route, schema, or required field | **Major** |
+| Renamed field/route, changed type or response shape | **Major** |
+| Added optional field, new endpoint, new optional query param | **Minor** |
+| Comment, export order, test-only fixture, no API surface change | **Patch** or no bump if zero `src/` diff |
+
+CI **warns** if a consumer pins an older `@plassy-app/api-contracts` than `plassy-contracts/package.json`.
+
+### Ship to preview
 
 **Mandatory order**:
 
 1. Modify `plassy-contracts` on a branch from `main`.
-2. Bump the version as a **prerelease** in `package.json` (e.g. `3.5.0-preview.1`).
+2. Bump version as **prerelease** in `package.json` (e.g. `3.5.0-preview.1`). Iterate with `3.5.0-preview.2`, etc.
 3. Update `CHANGELOG.md`.
 4. Open a draft PR → `main`.
 5. **Merge to main** → `tag-preview.yml` auto-creates `v3.5.0-preview.1` if missing → `publish.yml` publishes (~2–3 min).
@@ -126,7 +190,7 @@ The `@plassy-app/api-contracts` package is published to **GitHub Packages**, not
    git tag v3.5.0-preview.1
    git push origin v3.5.0-preview.1
    ```
-6. Wait for the `publish.yml` workflow to finish (~2–3 min).
+6. Wait for `publish.yml` to finish (~2–3 min).
 7. Bump consumers:
    ```bash
    ./scripts/bump-contracts.sh 3.5.0-preview.1
@@ -135,11 +199,26 @@ The `@plassy-app/api-contracts` package is published to **GitHub Packages**, not
 9. Open PRs for backend/scraper/app → `main`.
 10. Human merge → preview deploy via GitHub Actions.
 
-### Production release
+Deploy order after publish: **backend → scraper → app**.
 
-1. Bump `package.json` to stable version (e.g. `3.5.0`) on `main`.
+### Ship to production
+
+1. Bump `package.json` to stable version (e.g. `3.5.0`) on `main` + `CHANGELOG.md`.
 2. Create GitHub Release `v3.5.0` → `publish.yml` publishes stable to GitHub Packages.
-3. Bump consumers with stable version, merge, then tag app/backend/scraper repos for coordinated prod deploy.
+   ```bash
+   gh release create v3.5.0 --title "3.5.0" --notes "..."
+   ```
+3. `./scripts/bump-contracts.sh 3.5.0` in consumers, merge PRs.
+4. Tag app/backend/scraper repos (`gh release create vX.Y.Z`) for coordinated prod deploy.
+
+### Deprecate before removing (breaking changes)
+
+Prefer **two releases** instead of deleting in one shot:
+
+1. **Minor release** — mark endpoint/field as deprecated (still works, documented in changelog).
+2. **Major release** — remove it.
+
+Example: before deleting `GET /places/feed`, ship `2.1.0` with the route still present but deprecated; remove it in `3.0.0`. This gives mobile clients time to update (App Store review lag). If the feature is already unused in production, a single major bump is acceptable.
 
 ### Accepted tags
 
@@ -147,10 +226,6 @@ The `publish.yml` workflow publishes on:
 
 - `v*.*.*` — stable releases (production)
 - `v*.*.*-preview.*` — preview prereleases
-
-### Pinning
-
-Always pin the exact version: `"@plassy-app/api-contracts": "3.5.0-preview.1"` (not `^`).
 
 ### Which version does preview use?
 
@@ -163,6 +238,19 @@ Contracts are **npm packages on GitHub Packages**, not Railway services. Each en
 | After prod contracts release + consumers bumped | Same stable `X.Y.Z` | Same stable `X.Y.Z` |
 
 The version number (`-preview.N` vs stable) distinguishes preview from prod — **not** a git branch. Consumer bumps are **manual** (`./scripts/bump-contracts.sh`) so you control timing after npm publish (~2–3 min).
+
+### CI checks
+
+| Repo | Workflow | What runs |
+| ---- | -------- | --------- |
+| **Plassy-Contracts** | `.github/workflows/test.yml` | **Fail** if `src/` or `__tests__/` changed without `package.json` version bump |
+| **Plassy** (umbrella) | `.github/workflows/test.yml` | **Warning** if consumers pin an older version than the submodule |
+
+Triggers: every PR and push to `main` on each repo.
+
+Local: `bash plassy-contracts/scripts/check-version-bump.sh` (from umbrella) or `bash scripts/check-version-bump.sh` (inside Plassy-Contracts).
+
+Error `No version matching "X.Y.Z" found (but package exists)` means the tag was not published yet — wait for the workflow, then retry `bun add`.
 
 ## Backend and scraper
 
@@ -420,7 +508,8 @@ Project board: [Version 1](https://linear.app/plassy/project/version-1-ee36a8c46
 | `scripts/bump-contracts.sh`                                                    | Bump consumers after publish          |
 | `scripts/init-submodules.sh`                                                   | Cloud Agent submodule init (HTTPS + token) |
 | `.cursor/environment.json`                                                       | Cloud Agent VM install recipe         |
-| `.cursor/rules/*.mdc`                                                            | Scoped agent rules (Linear, contracts) |
+| `.cursor/CLOUD.md`                                                               | Cloud-only VM instructions            |
+| `.cursor/rules/*.mdc`                                                            | Scoped agent rules (Linear)           |
 | `plassy-contracts/.github/workflows/tag-preview.yml`                           | Auto-tag preview versions on main     |
 | `plassy-contracts/.github/workflows/publish.yml`                               | npm publish (stable + preview tags)   |
 | `README.md`                                                                    | Monorepo setup, root scripts          |
@@ -470,9 +559,10 @@ Docs: [Cloud Agents](https://cursor.com/docs/cloud-agent) · [Environment setup]
 
 | Mechanism | Path / location | Role in Plassy |
 | --------- | --------------- | -------------- |
-| **Environment recipe** | `.cursor/environment.json` | `install`: submodule init + `bun install` |
-| **Agent instructions** | `AGENTS.md` (this file) | Preview workflow, contracts order, git/PR rules, VM gotchas |
-| **Scoped rules** | `.cursor/rules/*.mdc` | Linear task creation, contracts bump/link conventions |
+| **Environment recipe** | `.cursor/environment.json` | `install` + `start` (Postgres/Redis) |
+| **Agent instructions** | `AGENTS.md` (this file) | Preview workflow, contracts, git/PR rules |
+| **Cloud-only instructions** | `.cursor/CLOUD.md` | VM gotchas (local IDE ignores this file) |
+| **Scoped rules** | `.cursor/rules/*.mdc` | Linear task creation |
 | **MCP servers** | Cursor dashboard (team) | Linear, Expo, Neon, Railway — configured in [Cloud Agents → MCP](https://cursor.com/agents) |
 | **Runtime secrets** | Cursor dashboard → Secrets | `GH_TOKEN` or `SUBMODULES_PAT` for private submodule clone (see `scripts/init-submodules.sh`) |
 
@@ -484,15 +574,15 @@ Use this when extending the Cloud Agent setup beyond the current minimum.
 | --------- | ----- | ---------------- | ------------------- |
 | **`environment.json`** | `.cursor/environment.json` | VM recipe: `install` (idempotent update), optional `start`, `terminals`, `env`, `snapshot`, or `build.dockerfile` | ✅ Primary repo-level config; takes precedence over dashboard saved envs |
 | **`AGENTS.md`** | Repo root (nested in subdirs for subprojects) | Persistent instructions — read by **local Agent and Cloud Agents** | ✅ Recommended; use a `Cursor Cloud specific instructions` section for VM-only notes |
-| **`CLOUD.md`** | `.cursor/CLOUD.md` | Cloud-only instructions (local IDE ignores this file) | ✅ Optional split if cloud-only content grows large |
-| **Project rules** | `.cursor/rules/*.mdc` | Scoped rules with `globs`, `alwaysApply`, or `metadata.environments: cloud` for cloud-only rules | ✅ `linear-task-creation.mdc`, `api-contracts-bun-link.mdc` |
+| **`CLOUD.md`** | `.cursor/CLOUD.md` | Cloud-only instructions (local IDE ignores this file) | ✅ VM setup, `bun link`, backend/scraper gotchas |
+| **Project rules** | `.cursor/rules/*.mdc` | Scoped rules with `globs`, `alwaysApply`, or `metadata.environments: cloud` for cloud-only rules | ✅ `linear-task-creation.mdc` |
 | **Hooks** | `.cursor/hooks.json` | Command hooks: `beforeShellExecution`, `afterFileEdit`, `preToolUse`, `subagentStart`, etc. | ✅ Project hooks run in cloud; user-level `~/.cursor/hooks.json` does **not** |
 | **MCP servers** | Dashboard and/or `.cursor/mcp.json` | External tools (DB, APIs, Expo builds, Linear issues) | ✅ HTTP (recommended) or stdio; team MCP via dashboard → Integrations |
 | **Cursor Secrets** | [cursor.com/dashboard/cloud-agents](https://cursor.com/dashboard/cloud-agents) | Env vars injected into the VM (`GH_TOKEN`, API keys, TOTP secrets) | ✅ Preferred over committing `.env` files |
 | **Environment-scoped secrets** | Cloud Agents dashboard → per-environment | Secrets limited to one saved environment / repo group | Optional — useful for staging vs prod credentials |
 | **Multi-repo environment** | Dashboard → Environments | Clone multiple repos into one VM (alternative to git submodules) | Plassy uses **submodules** in one umbrella repo instead |
 | **Snapshot vs Dockerfile** | `environment.json` → `snapshot` or `build.dockerfile` | Snapshot = fast boot from cached VM; Dockerfile = reproducible system deps (Postgres, Playwright, Docker-in-Docker) | Snapshot optional after guided setup; Dockerfile for advanced deps |
-| **`start` + `terminals`** | `environment.json` | Long-running processes in tmux (dev servers, `docker start`, `convex dev`) | Not configured yet — agent starts services on demand per AGENTS.md |
+| **`start` + `terminals`** | `environment.json` | Long-running processes in tmux (dev servers, `docker start`, `convex dev`) | ✅ `start` starts Postgres + Redis |
 | **Network allowlist** | Dashboard → Environment → Network | Restrict outbound domains per environment | Default + allowlist or allowlist-only |
 | **Private network** | Dockerfile / setup | Tailscale (userspace mode) or Cloudflare Tunnel for VPC/intranet | Not configured — preview APIs are public Railway URLs |
 | **AWS IAM role** | Secret `CURSOR_AWS_ASSUME_IAM_ROLE_ARN` | STS-assumed AWS access without long-lived keys | Not used |
@@ -515,11 +605,12 @@ Commit `environment.json` so the team shares the same VM recipe. Test config cha
 ```json
 {
   "name": "Plassy umbrella",
-  "install": "bash scripts/init-submodules.sh && bun install"
+  "install": "bash scripts/init-submodules.sh && bun install",
+  "start": "sudo service postgresql start && sudo service redis-server start"
 }
 ```
 
-The `install` script must stay **idempotent** — it may run on partially cached state. Keep heavy one-off setup (Playwright browsers, Postgres extension, contracts `bun link`) in AGENTS.md instructions or extend `install` / a Dockerfile when needed.
+The `install` script must stay **idempotent** — it may run on partially cached state. Heavy one-off setup (Playwright browsers, Postgres `pg_uuidv7` extension, contracts `bun link`) is documented in `.cursor/CLOUD.md`.
 
 **Required Cursor Secret:** `GH_TOKEN` or `SUBMODULES_PAT` with `repo` scope (and `read:packages` if the token is reused elsewhere). Without it, `scripts/init-submodules.sh` fails on private submodule clone.
 
@@ -527,36 +618,10 @@ The `install` script must stay **idempotent** — it may run on partially cached
 
 | Need | Add |
 | ---- | --- |
-| Cloud-only rules without polluting local IDE | `.cursor/CLOUD.md` or `metadata.environments: cloud` in `.mdc` rules |
 | Auto-format / policy checks in cloud | `.cursor/hooks.json` with `afterFileEdit` |
-| Postgres + Redis always running | `start` or `terminals` in `environment.json`, or Postgres in Dockerfile |
 | Faster repeat boots | Save a dashboard snapshot after guided setup; reference `"snapshot": "..."` in `environment.json` |
 | Submodule repo-specific agent docs | Nested `AGENTS.md` inside `plassy-app/`, `plassy-backend/`, etc. (nearest file wins) |
 
-## Cursor Cloud specific instructions
+## Cursor Cloud VM
 
-Durable, non-obvious notes for running this monorepo inside a Cursor Cloud Agent VM (headless Linux). The startup `install` script runs submodule init + root `bun install`. Standard commands live in `README.md` and each `package.json`; only the gotchas are listed here.
-
-### What runs on the cloud VM (and what does not)
-
-- **plassy-app is iOS/Android only and does NOT run on the web.** Do not attempt Expo web ("bun run web") as a way to "run" the product — react-native-web is incompatible (e.g. "Appearance.setColorScheme" is missing) and "@rnmapbox/maps" needs a "mapbox-gl" web peer that is intentionally not a dependency. On the VM, validate the app only via individual commands: "bun run --cwd plassy-app typecheck", "bun run --cwd plassy-app test", or "bun run --cwd plassy-app lint" (and the Metro bundler can start). The real run target is a physical device via EAS/TestFlight — see the preview workflow above.
-- **Runnable services on the VM:** `plassy-backend` (`:3001`), `plassy-scraper` (`:3002`), `plassy-frontend` (`:3000`). These are what to exercise for end-to-end checks here.
-
-### Private contracts package (`@plassy-app/api-contracts`)
-
-- Consumers (`plassy-backend`, `plassy-scraper`, `plassy-app`) depend on this private GitHub Packages package. The cloud `GH_TOKEN` does **not** have `read:packages`, so registry installs return `401`.
-- Local-dev workaround (handled by the update script): build `plassy-contracts` then `bun link` it, and `bun link @plassy-app/api-contracts` inside each consumer before `bun install`. Once linked, `bun install` no longer hits the registry. If a consumer suddenly fails to resolve the package, re-run `bun link @plassy-app/api-contracts` in that folder.
-
-### Backend (`plassy-backend`)
-
-- Local **PostgreSQL 16** and **Redis** are installed in the VM and started with "sudo service postgresql start" and "sudo service redis-server start" (no systemd in the VM, but sysvinit service wrappers are available). DB/user: "plassy" / "plassy", database "plassy".
-- The Prisma schema relies on the **`pg_uuidv7`** extension (`uuid_generate_v7()`), which is **not** in stock Postgres — it is installed into the cluster from `fboulnois/pg_uuidv7`. Apply schema with `bunx prisma migrate deploy` (the `init` migration runs `CREATE EXTENSION pg_uuidv7`). Do **not** use `prisma db push` for a fresh DB: it tries to create tables before the extension exists and fails with `function uuid_generate_v7() does not exist`.
-- **Boot gotcha:** `src/services/places/enrichment/llm-extractor.ts` constructs the OpenAI client at import time, so the backend **refuses to start without a non-empty `OPENAI_API_KEY`**, even though env validation marks it optional. A placeholder value (e.g. `sk-placeholder-...`) lets it boot; real AI features need a real key.
-- `/health` reports `"degraded"` with `redis:"disconnected"` in dev — this is expected (ioredis lazy-connects; Redis is optional in dev). `database:"connected"` is the signal the DB is wired correctly. `GET /api/hello` → `{"ok":true}` is a quick liveness check.
-- `.env` files are gitignored and created during setup ("cp .env.example .env"). Minimum to boot: "DATABASE_URL", "NODE_ENV=development", "OPENAI_API_KEY" (placeholder ok), and "SCRAPER_INTERNAL_TOKEN" (to match the scraper).
-
-### Scraper (`plassy-scraper`)
-
-- Boots without browsers, but **actual scraping needs Playwright Chromium**: `cd plassy-scraper && bunx playwright install --with-deps chromium` (installed once in the VM snapshot, not in the update script).
-- `/scrape/*` is protected by the `x-scraper-token` header which must equal `SCRAPER_INTERNAL_TOKEN`; the same value must be set in the backend `.env`. Generate with `openssl rand -hex 32`.
-- From a datacenter IP, Instagram/TikTok often return bot-wall pages, so OG titles may be generic (e.g. `"TikTok - Make Your Day"`). The pipeline still runs end-to-end; this is a network/IP limitation, not a code error.
+VM-specific setup (Postgres, Redis, `bun link`, backend boot gotchas, scraper Playwright) lives in **`.cursor/CLOUD.md`**. Configuration map and `environment.json` reference are in the section above.
