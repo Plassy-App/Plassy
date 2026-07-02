@@ -24,4 +24,5 @@ graphify-out/
 !.cursor/rules/
 !.cursor/rules/**
 !.cursor/environment.json
+!.cursor/CLOUD.md
 .DS_Store
