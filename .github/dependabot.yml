@@ -1,25 +1,11 @@
 version: 2
+# Submodule paths (plassy-app, plassy-backend, …) are private git submodules.
+# Dependabot clones with --recurse-submodules but cannot access those repos from
+# the umbrella repo, so directory entries under submodule paths always fail.
+# Configure Dependabot in each submodule repository instead.
 updates:
   - package-ecosystem: bun
     directory: /
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
-
-  - package-ecosystem: bun
-    directory: /plassy-app
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 10
-
-  - package-ecosystem: bun
-    directory: /plassy-backend
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 10
-
-  - package-ecosystem: bun
-    directory: /plassy-contracts
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 5
