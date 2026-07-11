@@ -1,25 +1,10 @@
 version: 2
 updates:
+  # Umbrella workspace only. Submodule packages (plassy-app, plassy-backend, …)
+  # live in separate private repos; Dependabot cannot clone them from here.
+  # Configure bun updates in each submodule repo's own dependabot.yml instead.
   - package-ecosystem: bun
     directory: /
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
-
-  - package-ecosystem: bun
-    directory: /plassy-app
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 10
-
-  - package-ecosystem: bun
-    directory: /plassy-backend
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 10
-
-  - package-ecosystem: bun
-    directory: /plassy-contracts
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 5
